@@ -1,45 +1,31 @@
-function showPage(content, page) {
-  clearInterval(content._activityTimer);
-  content._activityTimer = undefined;
-  content.replaceChildren();
-  if (page === 'Classes') {
+const pageRenderers = {
+  Classes: (content) => {
     const dashboard = document.createElement('div');
     dashboard.className = 'dashboard';
     dashboard.append(scheduleBar((className) => showClassView(content, className)), classGrid((className) => showClassView(content, className)));
     content.append(dashboard);
-    return;
-  }
-  if (page === 'Activity') {
-    showActivityPage(content);
-    return;
-  }
-  if (page === 'Pupils') {
-    showClassView(content, 'All pupils', 9999, true);
-    return;
-  }
-  if (page === 'Analytics') {
-    showAnalyticsPage(content);
-    return;
-  }
-  if (page === 'Homework Calendar') {
-    showHomeworkCalendarPage(content);
-    return;
-  }
-  if (page === 'Rooms') {
-    showRoomsPage(content);
-    return;
-  }
-  if (page === 'Detentions') {
-    showDetentionsPage(content);
-    return;
-  }
+  },
+  Activity: (content) => showActivityPage(content),
+  Pupils: (content) => showClassView(content, 'All pupils', 9999, true),
+  Analytics: (content) => showAnalyticsPage(content),
+  'Homework Calendar': (content) => showHomeworkCalendarPage(content),
+  Rooms: (content) => showRoomsPage(content),
+  Detentions: (content) => showDetentionsPage(content),
+};
+
+function showPage(content, page) {
+  clearInterval(content._activityTimer);
+  content._activityTimer = undefined;
+  content.replaceChildren();
+  const render = pageRenderers[page];
+  if (render) return render(content);
   const placeholder = document.createElement('div');
   placeholder.className = 'placeholder-page';
   placeholder.textContent = page;
   content.append(placeholder);
 }
 
-document.querySelectorAll('.device').forEach((device) => {
+function initializeDevice(device) {
   const content = device.querySelector('.screen-content');
   const toggle = device.querySelector('.menu-toggle');
   const menu = device.querySelector('.mobile-menu');
@@ -67,7 +53,9 @@ document.querySelectorAll('.device').forEach((device) => {
       menu.hidden = open;
     });
   }
-});
+}
+
+document.querySelectorAll('.device').forEach(initializeDevice);
 
 document.querySelectorAll('[data-mode]').forEach((button) => {
   button.addEventListener('click', () => {
@@ -866,9 +854,6 @@ function showActivityPage(content) {
   content.append(page);
 }
 
-const pupilNames = ['Aisha Ahmed', 'Ben Carter', 'Chloe Davis', 'Daniel Evans', 'Elena Foster', 'Freddie Green', 'Grace Hall', 'Niran Suksai', 'Isla James', 'Jacob Khan', 'Kaya Lewis', 'Liam Morgan', 'Pimchanok Saelim', 'Noah Okafor', 'Olivia Patel', 'Poppy Quinn', 'Ravi Shah', 'Sofia Turner', 'Theo Usman', 'Uma Vasquez', 'Willow White', 'Xavier Young', 'Yasmin Zahir', 'Zachary Brown', 'Amelia Cole', 'Bailey Dean', 'Charlie Fox', 'Daisy Grant', 'Ethan Hughes', 'Finley Irwin', 'Georgia King', 'Henry Long'];
-const thaiStudentDetails = { 'Niran Suksai': { isThai: true, nickname: 'Nin' }, 'Pimchanok Saelim': { isThai: true } };
-
 const registrationSessions = [
   { id: 'AM', label: 'AM form', start: 8 * 60, end: 8 * 60 + 30 },
   { id: 'P1', label: 'P1', start: 8 * 60 + 30, end: 9 * 60 + 25 },
@@ -909,5 +894,7 @@ function buildStudentTimetable(className) {
   ]));
 }
 
-refreshWhenChanged();
-setInterval(refreshWhenChanged, 1000);
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  refreshWhenChanged();
+  setInterval(refreshWhenChanged, 1000);
+}

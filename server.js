@@ -11,7 +11,7 @@ const contentTypes = {
 };
 
 function version() {
-  return ['index.html', 'styles.css', 'classes.js', 'analytics.js', 'homework.js', 'rooms.js', 'detentions.js', 'script.js']
+  return ['index.html', 'styles.css', 'data.js', 'classes.js', 'analytics.js', 'homework.js', 'rooms.js', 'detentions.js', 'script.js']
     .map((file) => fs.statSync(path.join(root, file)).mtimeMs)
     .join('-');
 }
