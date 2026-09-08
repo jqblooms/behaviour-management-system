@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Behaviour Management System</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="mode-switcher" aria-label="Mockup display mode">
+      <button class="mode-switcher__button is-active" type="button" data-mode="preview">Preview mode</button>
+      <button class="mode-switcher__button" type="button" data-mode="fill">Fill mode</button>
+    </div>
+    <main class="mockup-stage" aria-label="Responsive navigation mockup">
+      <section class="preview preview--desktop" aria-label="Desktop preview">
+        <div class="preview__label">Desktop · 16:9</div>
+        <div class="device device--desktop">
+          <nav class="navbar" aria-label="Desktop navigation">
+            <a class="brand" href="#classroom" data-page="Classroom" aria-label="Classroom">
+              <span class="brand__mark" aria-label="School logo placeholder"><i></i><i></i><i></i><i></i></span>
+              <b>Classroom</b>
+            </a>
+            <div class="nav-links">
+              <a class="is-active" href="#classes" data-page="Classes">Classes</a>
+              <a href="#activity" data-page="Activity">Activity</a>
+              <a href="#pupils" data-page="Pupils">Pupils</a>
+              <a href="#analytics" data-page="Analytics">Analytics</a>
+              <a href="#homework-calendar" data-page="Homework Calendar">Homework Calendar</a>
+              <a href="#rooms" data-page="Rooms">Rooms</a>
+              <a href="#detentions" data-page="Detentions">Detentions</a>
+            </div>
+          </nav>
+          <div class="screen-content" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="preview preview--mobile" aria-label="Mobile preview">
+        <div class="preview__label">Mobile · 9:18</div>
+        <div class="device device--mobile">
+          <nav class="navbar navbar--mobile" aria-label="Mobile navigation">
+            <a class="brand" href="#classroom" data-page="Classroom" aria-label="Classroom">
+              <span class="brand__mark" aria-label="School logo placeholder"><i></i><i></i><i></i><i></i></span>
+              <b>Classroom</b>
+            </a>
+            <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">
+              <span></span><span></span><span></span>
+            </button>
+            <div class="mobile-menu" id="mobile-menu" hidden>
+              <a class="is-active" href="#classes" data-page="Classes">Classes</a>
+              <a href="#activity" data-page="Activity">Activity</a>
+              <a href="#pupils" data-page="Pupils">Pupils</a>
+              <a href="#analytics" data-page="Analytics">Analytics</a>
+              <a href="#homework-calendar" data-page="Homework Calendar">Homework Calendar</a>
+              <a href="#rooms" data-page="Rooms">Rooms</a>
+              <a href="#detentions" data-page="Detentions">Detentions</a>
+            </div>
+          </nav>
+          <div class="screen-content" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="device device--fill" aria-label="Adaptive browser preview">
+        <nav class="navbar" aria-label="Adaptive navigation">
+          <a class="brand" href="#classroom" data-page="Classroom" aria-label="Classroom">
+            <span class="brand__mark" aria-label="School logo placeholder"><i></i><i></i><i></i><i></i></span>
+            <b>Classroom</b>
+          </a>
+          <div class="nav-links">
+            <a class="is-active" href="#classes" data-page="Classes">Classes</a>
+            <a href="#activity" data-page="Activity">Activity</a>
+            <a href="#pupils" data-page="Pupils">Pupils</a>
+            <a href="#analytics" data-page="Analytics">Analytics</a>
+            <a href="#homework-calendar" data-page="Homework Calendar">Homework Calendar</a>
+              <a href="#rooms" data-page="Rooms">Rooms</a>
+              <a href="#detentions" data-page="Detentions">Detentions</a>
+          </div>
+          <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="fill-menu">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="mobile-menu" id="fill-menu" hidden>
+            <a href="#classes" data-page="Classes">Classes</a>
+            <a href="#activity" data-page="Activity">Activity</a>
+            <a href="#pupils" data-page="Pupils">Pupils</a>
+            <a href="#analytics" data-page="Analytics">Analytics</a>
+            <a href="#homework-calendar" data-page="Homework Calendar">Homework Calendar</a>
+              <a href="#rooms" data-page="Rooms">Rooms</a>
+              <a href="#detentions" data-page="Detentions">Detentions</a>
+          </div>
+        </nav>
+        <div class="screen-content" aria-live="polite"></div>
+      </section>
+    </main>
+    <script src="classes.js"></script>
+    <script src="analytics.js"></script>
+    <script src="homework.js"></script>
+    <script src="rooms.js"></script>
+    <script src="detentions.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
