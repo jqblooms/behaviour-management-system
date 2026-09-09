@@ -11,6 +11,7 @@ const pageRenderers = {
   'Homework Calendar': (content) => showHomeworkCalendarPage(content),
   Rooms: (content) => showRoomsPage(content),
   Detentions: (content) => showDetentionsPage(content),
+  Messages: (content) => showTeacherMessages(content),
   Admin: (content) => showAdminPage(content),
 };
 

@@ -929,7 +929,14 @@ body {
 .msg-app { position: relative; display: flex; flex: 1 1 auto; min-width: 0; min-height: 0; width: 100%; background: #fff; }
 .msg-list { display: flex; flex: 0 0 232px; flex-direction: column; min-height: 0; border-right: 1px solid #e2e9ec; background: #fff; }
 .msg-app.is-list-hidden .msg-list { display: none; }
-.msg-list__head { flex: 0 0 auto; padding: 10px 12px; border-bottom: 1px solid #e9eef0; color: #48606c; font-size: 12px; }
+.msg-list__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 0 0 auto; padding: 8px 12px; border-bottom: 1px solid #e9eef0; color: #48606c; font-size: 12px; }
+.msg-new { flex: 0 0 auto; height: 24px; padding: 0 9px; border: 1px solid #55b5dd; border-radius: 12px; background: #eaf6fb; color: #2b8fb5; font: 700 10px "Segoe UI", Arial, sans-serif; cursor: pointer; }
+.msg-new-picker { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; padding: 10px 12px; border-bottom: 1px solid #e9eef0; background: #f8fafb; }
+.msg-new-picker select { height: 30px; padding: 0 8px; border: 1px solid #cfdde3; border-radius: 3px; color: #4b636e; background: #fff; font: 11px "Segoe UI", Arial, sans-serif; }
+.msg-new-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.msg-new-actions button { height: 26px; padding: 0 10px; border: 1px solid #cfdde3; border-radius: 3px; background: #fff; color: #607783; font: 700 10px "Segoe UI", Arial, sans-serif; cursor: pointer; }
+.msg-new-actions .confirm { border-color: #55b5dd; background: #55b5dd; color: #fff; }
+.msg-new-actions .confirm:disabled { opacity: .5; cursor: default; }
 .msg-list__scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .msg-peer { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 12px; border: 0; border-bottom: 1px solid #f0f3f4; background: transparent; text-align: left; cursor: pointer; }
 .msg-peer:hover { background: #f6f8f9; }

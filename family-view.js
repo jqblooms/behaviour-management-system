@@ -63,6 +63,10 @@ function familyClockTime(ms) {
   return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function familyPeerTime(ms) {
+  return new Date(ms).toDateString() === new Date().toDateString() ? familyClockTime(ms) : familyDayLabel(ms);
+}
+
 function familyDayLabel(ms) {
   const midnight = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const diff = Math.round((midnight(new Date()) - midnight(new Date(ms))) / 86400000);
@@ -479,7 +483,7 @@ function renderFamilyMessages(body, content) {
       row.innerHTML = `
         <span class="pupil-photo" aria-hidden="true">${familyInitials(teacher.name)}</span>
         <span class="msg-peer__text">
-          <span class="msg-peer__row"><strong>${teacher.name}</strong><span class="msg-peer__time">${last ? familyClockTime(last.at) : ''}</span></span>
+          <span class="msg-peer__row"><strong>${teacher.name}</strong><span class="msg-peer__time">${last ? familyPeerTime(last.at) : ''}</span></span>
           <span class="msg-peer__preview">${last ? `${last.from === 'parent' ? 'You: ' : ''}${familyEscape(last.text)}` : teacher.subject}</span>
         </span>`;
       row.addEventListener('click', () => {
@@ -529,5 +533,194 @@ function renderFamilyMessages(body, content) {
   });
 
   renderPeers();
+  renderThread();
+}
+
+/* Teacher side of the same messaging app: pick a class, then a pupil, then
+   message home. Existing conversations are listed newest-first. */
+
+let teacherMessageStore;
+function teacherMessages() {
+  if (!teacherMessageStore) teacherMessageStore = teacherSeedMessages();
+  return teacherMessageStore;
+}
+
+function teacherSeedMessages() {
+  const now = Date.now();
+  const hour = 3600000;
+  const day = 86400000;
+  return {
+    'Ben Carter': { className: 'Y1/Cs', messages: [
+      { from: 'teacher', text: 'Hi — Ben left his PE kit today, could it come back in tomorrow?', at: now - 2 * day - 3 * hour },
+      { from: 'parent', text: 'Sorry about that, will send it in.', at: now - 2 * day - 2 * hour },
+    ] },
+    'Grace Hall': { className: 'Y6/Cs', messages: [
+      { from: 'parent', text: 'Is Grace behind on the reading log?', at: now - 6 * hour },
+      { from: 'teacher', text: 'A little — two entries would catch her up, nothing to worry about.', at: now - 5 * hour },
+    ] },
+    'Noah Okafor': { className: 'Y3/Cs', messages: [
+      { from: 'teacher', text: 'Noah had a great week — three merits for helping others.', at: now - 1 * day },
+    ] },
+    'Isla James': { className: 'Y8/Cs', messages: [
+      { from: 'teacher', text: 'Reminder: parents’ evening booking closes Friday.', at: now - 35 * 60000 },
+    ] },
+  };
+}
+
+function showTeacherMessages(content) {
+  const device = content.closest('.device');
+  const narrow = () => !!device && (device.classList.contains('device--mobile')
+    || (device.classList.contains('device--fill') && window.matchMedia('(max-width: 700px)').matches));
+
+  const view = document.createElement('section');
+  view.className = 'family-view family-view--teacher';
+  view.setAttribute('aria-label', 'Parent messages');
+  view.innerHTML = `
+    <header class="family-id">
+      <span class="pupil-photo" aria-hidden="true">✉</span>
+      <div class="family-id__text"><strong>Messages</strong><span>Message home about a pupil</span></div>
+    </header>
+    <div class="family-body">
+      <div class="msg-app">
+        <aside class="msg-list">
+          <div class="msg-list__head"><strong>Conversations</strong><button class="msg-new" type="button">＋ New</button></div>
+          <div class="msg-new-picker" hidden>
+            <select class="msg-new-class" aria-label="Class"><option value="">Choose a class…</option>${classes.map(([name]) => `<option value="${name}">${name}</option>`).join('')}</select>
+            <select class="msg-new-student" aria-label="Pupil" disabled><option value="">Choose a pupil…</option></select>
+            <div class="msg-new-actions"><button class="msg-new-cancel" type="button">Cancel</button><button class="msg-new-start confirm" type="button" disabled>Start</button></div>
+          </div>
+          <div class="msg-list__scroll"></div>
+        </aside>
+        <section class="msg-thread">
+          <div class="msg-thread__head">
+            <button class="msg-list-toggle" type="button" aria-label="Show or hide conversations">☰</button>
+            <span class="pupil-photo msg-thread__avatar" aria-hidden="true"></span>
+            <span class="msg-thread__who"></span>
+          </div>
+          <div class="msg-scroll" aria-live="polite"></div>
+          <form class="msg-compose">
+            <input class="msg-input" type="text" placeholder="Message home…" aria-label="Message to parent" autocomplete="off">
+            <button class="msg-send" type="submit">Send</button>
+          </form>
+        </section>
+      </div>
+    </div>`;
+  content.append(view);
+
+  const app = view.querySelector('.msg-app');
+  const listScroll = view.querySelector('.msg-list__scroll');
+  const scroll = view.querySelector('.msg-scroll');
+  const who = view.querySelector('.msg-thread__who');
+  const avatar = view.querySelector('.msg-thread__avatar');
+  const form = view.querySelector('.msg-compose');
+  const input = view.querySelector('.msg-input');
+  const picker = view.querySelector('.msg-new-picker');
+  const classSelect = view.querySelector('.msg-new-class');
+  const studentSelect = view.querySelector('.msg-new-student');
+  const startButton = view.querySelector('.msg-new-start');
+
+  let current = teacherConversationsSorted()[0]?.student || null;
+
+  view.querySelector('.msg-list-toggle').addEventListener('click', () => app.classList.toggle('is-list-hidden'));
+  view.querySelector('.msg-new').addEventListener('click', () => { picker.hidden = false; });
+  view.querySelector('.msg-new-cancel').addEventListener('click', () => { picker.hidden = true; });
+  classSelect.addEventListener('change', () => {
+    const roster = classSelect.value ? getClassRoster(classSelect.value) : [];
+    studentSelect.innerHTML = `<option value="">Choose a pupil…</option>${roster.map((name) => `<option value="${name}">${name}</option>`).join('')}`;
+    studentSelect.disabled = !roster.length;
+    startButton.disabled = true;
+  });
+  studentSelect.addEventListener('change', () => { startButton.disabled = !studentSelect.value; });
+  startButton.addEventListener('click', () => {
+    const student = studentSelect.value;
+    if (!student) return;
+    if (!teacherMessages()[student]) teacherMessages()[student] = { className: classSelect.value, messages: [] };
+    current = student;
+    picker.hidden = true;
+    classSelect.value = '';
+    studentSelect.innerHTML = '<option value="">Choose a pupil…</option>';
+    studentSelect.disabled = true;
+    startButton.disabled = true;
+    renderConversations();
+    renderThread();
+    if (narrow()) app.classList.add('is-list-hidden');
+    input.focus();
+  });
+
+  function teacherConversationsSorted() {
+    return Object.entries(teacherMessages())
+      .map(([student, conv]) => ({ student, className: conv.className, last: conv.messages[conv.messages.length - 1] }))
+      .sort((a, b) => (b.last?.at || 0) - (a.last?.at || 0));
+  }
+
+  function renderConversations() {
+    listScroll.replaceChildren();
+    const rows = teacherConversationsSorted();
+    if (!rows.length) {
+      listScroll.innerHTML = '<p class="msg-empty">No conversations yet — start one with “＋ New”.</p>';
+      return;
+    }
+    rows.forEach(({ student, className, last }) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = `msg-peer${student === current ? ' is-active' : ''}`;
+      row.innerHTML = `
+        <span class="pupil-photo" aria-hidden="true">${familyInitials(student)}</span>
+        <span class="msg-peer__text">
+          <span class="msg-peer__row"><strong>${student}</strong><span class="msg-peer__time">${last ? familyPeerTime(last.at) : ''}</span></span>
+          <span class="msg-peer__preview">${last ? `${last.from === 'teacher' ? 'You: ' : ''}${familyEscape(last.text)}` : className}</span>
+        </span>`;
+      row.addEventListener('click', () => {
+        current = student;
+        renderConversations();
+        renderThread();
+        if (narrow()) app.classList.add('is-list-hidden');
+        input.focus();
+      });
+      listScroll.append(row);
+    });
+  }
+
+  function renderThread() {
+    if (!current || !teacherMessages()[current]) {
+      who.textContent = 'Select a conversation';
+      avatar.textContent = '';
+      scroll.innerHTML = '<p class="msg-empty">Choose a pupil on the left, or start a new message.</p>';
+      return;
+    }
+    const conv = teacherMessages()[current];
+    who.textContent = `${current} · ${conv.className}`;
+    avatar.textContent = familyInitials(current);
+    if (!conv.messages.length) {
+      scroll.innerHTML = '<p class="msg-empty">No messages yet — send the first one below.</p>';
+      return;
+    }
+    let html = '';
+    let lastDay = '';
+    conv.messages.forEach((message) => {
+      const label = familyDayLabel(message.at);
+      if (label !== lastDay) { html += `<div class="msg-day">${label}</div>`; lastDay = label; }
+      const meta = `${familyClockTime(message.at)}${message.from === 'teacher' ? ' <span class="msg-tick">✓✓</span>' : ''}`;
+      html += `<div class="msg-bubble msg-bubble--${message.from === 'teacher' ? 'out' : 'in'}">
+        <span class="msg-bubble__text">${familyEscape(message.text)}</span>
+        <span class="msg-bubble__meta">${meta}</span>
+      </div>`;
+    });
+    scroll.innerHTML = html;
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text || !current) return;
+    if (!teacherMessages()[current]) teacherMessages()[current] = { className: '', messages: [] };
+    teacherMessages()[current].messages.push({ from: 'teacher', text, at: Date.now() });
+    input.value = '';
+    renderThread();
+    renderConversations();
+  });
+
+  renderConversations();
   renderThread();
 }
