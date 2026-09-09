@@ -35,7 +35,7 @@ function renderPupilHistory(student) {
         <span class="pupil-history__time">${pupilHistoryTime(entry.at)}</span>
         <button class="pupil-history__remove" type="button" aria-label="Remove ${entry.label}">×</button>
         ${entry.reason ? `<p class="pupil-history__reason">“${entry.reason}”</p>` : ''}
-        ${entry.detention ? `<span class="pupil-history__det">Detention · ${entry.detention.length}</span>` : ''}
+        ${entry.detention ? `<span class="pupil-history__det">Detention · ${entry.detention.length}${entry.detention.room ? ` · ${entry.detention.room}` : ''}${entry.detention.date ? ` · ${entry.detention.date}${entry.detention.time ? ` ${entry.detention.time}` : ''}` : ''}</span>` : ''}
       </article>`).join('')
     : '<p class="pupil-history__empty">No behaviour recorded yet.</p>';
   return `<div class="pupil-history"><div class="pupil-history__head">Recent activity</div><div class="pupil-history__list">${rows}</div></div>`;
@@ -86,7 +86,12 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
       <label class="award-modal__field"><span>Reason (optional)</span><textarea class="award-modal__reason" rows="2" placeholder="Add a note about this behaviour…"></textarea></label>
       <label class="award-modal__detention-toggle" hidden><input type="checkbox" class="award-modal__detention-check"> Would you like to also give a detention?</label>
       <div class="award-modal__detention-detail" hidden>
-        <label class="award-modal__field"><span>Detention length</span><select class="award-modal__detention-length"><option>15 minutes</option><option selected>30 minutes</option><option>45 minutes</option><option>60 minutes</option></select></label>
+        <div class="award-modal__det-grid">
+          <label class="award-modal__field"><span>Date</span><input class="award-modal__det-date" type="date"></label>
+          <label class="award-modal__field"><span>Time</span><input class="award-modal__det-time" type="time" value="15:15"></label>
+          <label class="award-modal__field"><span>Length</span><select class="award-modal__detention-length"><option>15 minutes</option><option selected>30 minutes</option><option>45 minutes</option><option>60 minutes</option></select></label>
+          <label class="award-modal__field award-modal__field--wide"><span>Room</span><select class="award-modal__det-room"></select></label>
+        </div>
       </div>
       <div class="sensitive-modal__actions"><button class="award-modal__cancel" type="button">Cancel</button><button class="confirm award-modal__confirm" type="button">Award</button></div>
     </div></div>
@@ -123,6 +128,10 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   const awardModal = view.querySelector('.award-modal');
   const removeModal = view.querySelector('.remove-modal');
 
+  const detentionRoomOptions = (typeof DETENTION_ROOMS !== 'undefined' ? DETENTION_ROOMS : rooms)
+    .map((name) => `<option>${name}</option>`).join('');
+  awardModal.querySelector('.award-modal__det-room').innerHTML = detentionRoomOptions;
+
   function openAwardModal({ type, icon, label, subject, onConfirm }) {
     const isNegative = type === 'negative';
     awardModal.querySelector('.award-modal__title').textContent = `${isNegative ? 'Log' : 'Award'} ${label}`;
@@ -132,10 +141,18 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     const detentionCheck = awardModal.querySelector('.award-modal__detention-check');
     const detentionDetail = awardModal.querySelector('.award-modal__detention-detail');
     const detentionLength = awardModal.querySelector('.award-modal__detention-length');
+    const detentionDate = awardModal.querySelector('.award-modal__det-date');
+    const detentionTime = awardModal.querySelector('.award-modal__det-time');
+    const detentionRoom = awardModal.querySelector('.award-modal__det-room');
     reason.value = '';
     detentionCheck.checked = false;
     detentionDetail.hidden = true;
     detentionToggle.hidden = !isNegative;
+    const today = new Date();
+    detentionDate.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    detentionTime.value = '15:15';
+    detentionRoom.selectedIndex = 0;
+    detentionLength.selectedIndex = 1;
     detentionCheck.onchange = () => { detentionDetail.hidden = !detentionCheck.checked; };
     awardModal.querySelector('.award-modal__confirm').textContent = isNegative ? 'Log behaviour' : 'Award';
     awardModal.hidden = false;
@@ -144,10 +161,33 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     const close = () => { awardModal.hidden = true; detentionCheck.onchange = null; };
     awardModal.querySelector('.award-modal__cancel').onclick = close;
     awardModal.querySelector('.award-modal__confirm').onclick = () => {
-      const detention = isNegative && detentionCheck.checked ? { length: detentionLength.value } : null;
+      const detention = isNegative && detentionCheck.checked
+        ? { length: detentionLength.value, date: detentionDate.value, time: detentionTime.value, room: detentionRoom.value }
+        : null;
       close();
       onConfirm({ reason: reason.value.trim(), detention });
     };
+  }
+
+  function commitDetention(student, form, reason, label) {
+    const minutes = parseInt(form.length, 10) || 30;
+    const record = {
+      id: `det-award-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+      date: form.date,
+      time: form.time,
+      minutes,
+      length: form.length,
+      pupil: student.name,
+      className,
+      teacher: 'Class teacher',
+      room: form.room,
+      reason: reason || label,
+      status: 'pending',
+    };
+    if (typeof getDetentions === 'function' && typeof saveDetentions === 'function') {
+      saveDetentions([...getDetentions(), record]);
+    }
+    return record;
   }
 
   function openRemoveConfirm(entry, onConfirm) {
@@ -214,7 +254,8 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
               student[type] += points;
               const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
               if (score) score.textContent = student[type];
-              recordAward(student, { type, icon: button.dataset.icon, label: button.dataset.label, reason, detention, points });
+              const detRecord = detention ? commitDetention(student, detention, reason, button.dataset.label) : null;
+              recordAward(student, { type, icon: button.dataset.icon, label: button.dataset.label, reason, detention: detRecord, points });
               renderSidebar(student, selectedTab);
             },
           });
@@ -227,6 +268,9 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
           if (!entry) return;
           const apply = () => {
             student.history.splice(idx, 1);
+            if (entry.detention?.id && typeof getDetentions === 'function' && typeof saveDetentions === 'function') {
+              saveDetentions(getDetentions().filter((det) => det.id !== entry.detention.id));
+            }
             const pts = entry.points || 1;
             if (entry.type === 'positive') student.positive = Math.max(0, student.positive - pts);
             else student.negative = Math.max(0, student.negative - pts);
@@ -640,7 +684,8 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
               if (isPositive) student.positive += points; else student.negative += points;
               const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
               if (score) score.textContent = isPositive ? student.positive : student.negative;
-              recordAward(student, { type, icon: button.dataset.icon, label, reason, detention, points });
+              const detRecord = detention ? commitDetention(student, detention, reason, label) : null;
+              recordAward(student, { type, icon: button.dataset.icon, label, reason, detention: detRecord, points });
             });
             view.querySelectorAll('.pupil-card').forEach((card) => card.classList.remove('is-selected'));
             refreshAttendanceHighlights();

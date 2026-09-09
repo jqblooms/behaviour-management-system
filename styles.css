@@ -237,9 +237,12 @@ body {
 .award-modal__field { display: block; margin-bottom: 10px; }
 .award-modal__field span { display: block; margin-bottom: 4px; color: #7a8c96; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .award-modal__reason { width: 100%; resize: vertical; padding: 7px 9px; border: 1px solid #cfdde3; border-radius: 3px; color: #4b636e; font: 12px "Segoe UI", Arial, sans-serif; }
-.award-modal__detention-length { width: 100%; height: 32px; padding: 0 8px; border: 1px solid #cfdde3; border-radius: 3px; color: #4b636e; background: #fff; font: 12px "Segoe UI", Arial, sans-serif; }
 .award-modal__detention-toggle { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; color: #55707c; font-size: 12px; font-weight: 600; }
 .award-modal__detention-detail { margin-bottom: 4px; }
+.award-modal__det-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+.award-modal__det-grid .award-modal__field { margin-bottom: 0; }
+.award-modal__det-grid input, .award-modal__det-grid select { width: 100%; height: 32px; padding: 0 8px; border: 1px solid #cfdde3; border-radius: 3px; color: #4b636e; background: #fff; font: 12px "Segoe UI", Arial, sans-serif; }
+.award-modal__det-grid .award-modal__field--wide { grid-column: 1 / -1; }
 
 .sensitive-modal { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; padding: 18px; background: rgba(36, 59, 70, .38); }
 .sensitive-modal__card { width: min(330px, 100%); padding: 20px; border-radius: 5px; background: #fff; box-shadow: 0 12px 30px rgba(30, 50, 61, .25); }
