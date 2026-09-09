@@ -58,8 +58,10 @@ function initializeDevice(device) {
 
 document.querySelectorAll('.device').forEach(initializeDevice);
 
+const mobileViewport = window.matchMedia('(max-width: 700px), (hover: none) and (pointer: coarse)');
+
 function syncVisibleDevices() {
-  const fillMode = document.querySelector('.mockup-stage').classList.contains('mode-fill');
+  const fillMode = mobileViewport.matches || document.querySelector('.mockup-stage').classList.contains('mode-fill');
   document.querySelectorAll('.device').forEach((device) => {
     const active = fillMode ? device.classList.contains('device--fill') : !device.classList.contains('device--fill');
     const content = device.querySelector('.screen-content');
@@ -72,6 +74,8 @@ function syncVisibleDevices() {
     }
   });
 }
+
+mobileViewport.addEventListener('change', syncVisibleDevices);
 
 document.querySelectorAll('[data-mode]').forEach((button) => {
   button.addEventListener('click', () => {
