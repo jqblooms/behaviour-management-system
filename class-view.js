@@ -1,3 +1,46 @@
+function pupilHistoryTime(ms) {
+  const seconds = Math.round((Date.now() - ms) / 1000);
+  if (seconds < 45) return 'just now';
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.round(seconds / 3600)}h ago`;
+  return `${Math.round(seconds / 86400)}d ago`;
+}
+
+function seedPupilHistory(index) {
+  const positives = getBehaviourAwardPairs('positive');
+  const negatives = getBehaviourAwardPairs('negative');
+  const now = Date.now();
+  const entries = [];
+  if (positives.length) {
+    const [icon, label] = positives[index % positives.length];
+    entries.push({ type: 'positive', icon, label, points: 1, at: now - ((index % 6) + 1) * 5400000 });
+  }
+  if (negatives.length && index % 3 !== 1) {
+    const [icon, label] = negatives[(index * 2) % negatives.length];
+    entries.push({ type: 'negative', icon, label, points: 1, at: now - ((index % 4) + 2) * 9000000, detention: index % 4 === 0 ? { length: '30 minutes' } : null });
+  }
+  if (positives.length > 1) {
+    const [icon, label] = positives[(index + 3) % positives.length];
+    entries.push({ type: 'positive', icon, label, points: 1, at: now - ((index % 5) + 6) * 3600000 });
+  }
+  return entries.sort((a, b) => b.at - a.at);
+}
+
+function renderPupilHistory(student) {
+  const items = (student.history || []).slice(0, 25);
+  const rows = items.length
+    ? items.map((entry, idx) => `<article class="pupil-history__item pupil-history__item--${entry.type}" data-idx="${idx}">
+        <span class="pupil-history__icon">${entry.icon}</span>
+        <span class="pupil-history__label">${entry.type === 'negative' ? '−' : '+'} ${entry.label}${entry.points > 1 ? ` ×${entry.points}` : ''}</span>
+        <span class="pupil-history__time">${pupilHistoryTime(entry.at)}</span>
+        <button class="pupil-history__remove" type="button" aria-label="Remove ${entry.label}">×</button>
+        ${entry.reason ? `<p class="pupil-history__reason">“${entry.reason}”</p>` : ''}
+        ${entry.detention ? `<span class="pupil-history__det">Detention · ${entry.detention.length}</span>` : ''}
+      </article>`).join('')
+    : '<p class="pupil-history__empty">No behaviour recorded yet.</p>';
+  return `<div class="pupil-history"><div class="pupil-history__head">Recent activity</div><div class="pupil-history__list">${rows}</div></div>`;
+}
+
 function showClassView(content, className, rosterSizeOverride, searchable) {
     clearInterval(content._activityTimer);
     content._activityTimer = undefined;
@@ -31,11 +74,27 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
       <button class="tool-button tool-button--right pupil-info" type="button" aria-label="Show pupil information">Show pupil info</button>
     </div>
     <div class="class-seat-grid"></div>
+    <div class="award-glow" aria-hidden="true"></div>
     <div class="award-panel" hidden><button class="award-positive" type="button">Award positive</button><button class="award-negative" type="button">Award negative</button></div>
     <aside class="award-sidebar" hidden aria-label="Pupil details"><div class="award-sidebar__bar"><span>Pupil</span><button class="award-sidebar__overview" type="button" hidden>View student overview</button><button class="award-sidebar__close" type="button" aria-label="Close pupil sidebar">×</button></div><div class="sidebar-body"></div></aside>
     <div class="sensitive-modal" hidden><div class="sensitive-modal__card"><h2>Display pupil information?</h2><p>This will reveal sensitive pupil indicators on the seating plan. Only continue when it is appropriate to view this information.</p><div class="sensitive-modal__actions"><button class="cancel" type="button">Cancel</button><button class="confirm" type="button">Display information</button></div></div></div>
     <div class="sensitive-modal room-modal" hidden><div class="sensitive-modal__card"><h2>Add a room</h2><p>Enter the name for the new room.</p><form class="room-form"><input class="room-name-input" type="text" maxlength="50" required placeholder="e.g. Science Lab 101" aria-label="Room name"><div class="sensitive-modal__actions"><button class="room-cancel" type="button">Cancel</button><button class="confirm" type="submit">Add room</button></div></form></div></div>
-    <div class="sensitive-modal attendance-modal" hidden><div class="sensitive-modal__card"><h2>Take attendance</h2><p>Select the period you want to record attendance for ${className}.</p><select class="attendance-select" aria-label="Attendance period"></select><div class="sensitive-modal__actions"><button class="attendance-cancel" type="button">Cancel</button><button class="confirm" type="button">Open register</button></div></div></div>`;
+    <div class="sensitive-modal attendance-modal" hidden><div class="sensitive-modal__card"><h2>Take attendance</h2><p>Select the period you want to record attendance for ${className}.</p><select class="attendance-select" aria-label="Attendance period"></select><div class="sensitive-modal__actions"><button class="attendance-cancel" type="button">Cancel</button><button class="confirm" type="button">Open register</button></div></div></div>
+    <div class="sensitive-modal award-modal" hidden><div class="sensitive-modal__card">
+      <h2 class="award-modal__title">Award behaviour</h2>
+      <p class="award-modal__subject"></p>
+      <label class="award-modal__field"><span>Reason (optional)</span><textarea class="award-modal__reason" rows="2" placeholder="Add a note about this behaviour…"></textarea></label>
+      <label class="award-modal__detention-toggle" hidden><input type="checkbox" class="award-modal__detention-check"> Would you like to also give a detention?</label>
+      <div class="award-modal__detention-detail" hidden>
+        <label class="award-modal__field"><span>Detention length</span><select class="award-modal__detention-length"><option>15 minutes</option><option selected>30 minutes</option><option>45 minutes</option><option>60 minutes</option></select></label>
+      </div>
+      <div class="sensitive-modal__actions"><button class="award-modal__cancel" type="button">Cancel</button><button class="confirm award-modal__confirm" type="button">Award</button></div>
+    </div></div>
+    <div class="sensitive-modal remove-modal" hidden><div class="sensitive-modal__card">
+      <h2>Remove behaviour point?</h2>
+      <p class="remove-modal__text"></p>
+      <div class="sensitive-modal__actions"><button class="remove-modal__cancel" type="button">Cancel</button><button class="confirm remove-modal__confirm" type="button">Remove</button></div>
+    </div></div>`;
   const roomMenu = view.querySelector('.room-menu');
   const roomToggle = view.querySelector('.room-toggle');
   const seatGrid = view.querySelector('.class-seat-grid');
@@ -46,6 +105,60 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   const viewToggle = view.querySelector('.view-toggle');
   const awardSidebar = view.querySelector('.award-sidebar');
   const overviewButton = awardSidebar.querySelector('.award-sidebar__overview');
+  const awardGlow = view.querySelector('.award-glow');
+
+  function flashAward(type) {
+    if (!awardGlow) return;
+    awardGlow.classList.remove('is-flash', 'is-positive', 'is-negative');
+    void awardGlow.offsetWidth;
+    awardGlow.classList.add('is-flash', `is-${type}`);
+  }
+
+  function recordAward(student, entry) {
+    if (!student.history) student.history = [];
+    student.history.unshift({ at: Date.now(), points: 1, ...entry });
+    flashAward(entry.type);
+  }
+
+  const awardModal = view.querySelector('.award-modal');
+  const removeModal = view.querySelector('.remove-modal');
+
+  function openAwardModal({ type, icon, label, subject, onConfirm }) {
+    const isNegative = type === 'negative';
+    awardModal.querySelector('.award-modal__title').textContent = `${isNegative ? 'Log' : 'Award'} ${label}`;
+    awardModal.querySelector('.award-modal__subject').textContent = subject;
+    const reason = awardModal.querySelector('.award-modal__reason');
+    const detentionToggle = awardModal.querySelector('.award-modal__detention-toggle');
+    const detentionCheck = awardModal.querySelector('.award-modal__detention-check');
+    const detentionDetail = awardModal.querySelector('.award-modal__detention-detail');
+    const detentionLength = awardModal.querySelector('.award-modal__detention-length');
+    reason.value = '';
+    detentionCheck.checked = false;
+    detentionDetail.hidden = true;
+    detentionToggle.hidden = !isNegative;
+    detentionCheck.onchange = () => { detentionDetail.hidden = !detentionCheck.checked; };
+    awardModal.querySelector('.award-modal__confirm').textContent = isNegative ? 'Log behaviour' : 'Award';
+    awardModal.hidden = false;
+    reason.focus();
+
+    const close = () => { awardModal.hidden = true; detentionCheck.onchange = null; };
+    awardModal.querySelector('.award-modal__cancel').onclick = close;
+    awardModal.querySelector('.award-modal__confirm').onclick = () => {
+      const detention = isNegative && detentionCheck.checked ? { length: detentionLength.value } : null;
+      close();
+      onConfirm({ reason: reason.value.trim(), detention });
+    };
+  }
+
+  function openRemoveConfirm(entry, onConfirm) {
+    removeModal.querySelector('.remove-modal__text').textContent = entry.detention
+      ? `This removes the “${entry.label}” point and cancels the linked ${entry.detention.length} detention.`
+      : `This removes the “${entry.label}” point.`;
+    removeModal.hidden = false;
+    const close = () => { removeModal.hidden = true; };
+    removeModal.querySelector('.remove-modal__cancel').onclick = close;
+    removeModal.querySelector('.remove-modal__confirm').onclick = () => { close(); onConfirm(); };
+  }
 
   if (className === 'All pupils') view.querySelector('.attendance')?.remove();
 
@@ -84,7 +197,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     if (selectedTab === 'sen') content = sensitiveVisible ? `<p class="sen-empty">${Object.entries(student.needs).filter(([, enabled]) => enabled).map(([label]) => label).join(' · ') || 'No recorded indicators'}</p>` : '<p class="sen-empty">Pupil information is hidden. Use “Show pupil info” to reveal it.</p>';
     else if (selectedTab === 'notes') content = '<textarea class="sidebar-note" placeholder="Write a note about this pupil…"></textarea>';
     else if (selectedTab === 'qa') content = '<div class="quick-answer"><button type="button" aria-label="Answer correct"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4V10h3Zm2 10h8.5a2 2 0 0 0 1.9-1.4l1.6-5A2 2 0 0 0 19.1 11H15l.5-4.1A2 2 0 0 0 13.5 4L9 10v10Z"/></svg></button><button type="button" aria-label="Answer incorrect"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v10H4V4h3Zm2 0h8.5a2 2 0 0 1 1.9 1.4l1.6 5A2 2 0 0 1 19.1 13H15l.5 4.1a2 2 0 0 1-2 2.9L9 14V4Z"/></svg></button></div>';
-    else content = `<div class="award-icon-grid">${awardNames.map(([icon, label, points]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button" data-points="${points}">${points > 1 ? `<b class="award-icon__points">${points}</b>` : ''}${icon}<span>${label}</span></button>`).join('')}</div>`;
+    else content = `<div class="award-icon-grid">${awardNames.map(([icon, label, points]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button" data-points="${points}" data-icon="${icon}" data-label="${label}">${points > 1 ? `<b class="award-icon__points">${points}</b>` : ''}${icon}<span>${label}</span></button>`).join('')}${renderPupilHistory(student)}`;
     awardSidebar.querySelector('.sidebar-body').innerHTML = `<div class="student-summary"><span class="pupil-photo">${student.initials}</span><span class="summary-positive">${student.positive}</span><span class="summary-name">${student.name}</span><span class="summary-negative">${student.negative}</span></div><div class="sidebar-tab-nav"><button class="sidebar-tab-scroll" type="button" data-direction="-1" aria-label="Show earlier tabs">‹</button><div class="sidebar-tabs">${tabs.map(([key, label]) => `<button class="sidebar-tab${key === selectedTab ? ' is-active' : ''}" type="button" data-tab="${key}">${label}</button>`).join('')}</div><button class="sidebar-tab-scroll" type="button" data-direction="1" aria-label="Show later tabs">›</button></div><div class="sidebar-content">${content}</div>`;
     awardSidebar.querySelectorAll('.sidebar-tab').forEach((tab) => tab.addEventListener('click', () => renderSidebar(student, tab.dataset.tab)));
     const tabStrip = awardSidebar.querySelector('.sidebar-tabs');
@@ -93,10 +206,38 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
       awardSidebar.querySelectorAll('.award-icon').forEach((button) => {
         button.addEventListener('click', () => {
           const points = Number(button.dataset.points) || 1;
-          if (isPositive) student.positive += points; else student.negative += points;
-          const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
-          if (score) score.textContent = isPositive ? student.positive : student.negative;
-          renderSidebar(student, selectedTab);
+          const type = isPositive ? 'positive' : 'negative';
+          openAwardModal({
+            type, icon: button.dataset.icon, label: button.dataset.label,
+            subject: `${student.name} · ${points} point${points === 1 ? '' : 's'}`,
+            onConfirm: ({ reason, detention }) => {
+              student[type] += points;
+              const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
+              if (score) score.textContent = student[type];
+              recordAward(student, { type, icon: button.dataset.icon, label: button.dataset.label, reason, detention, points });
+              renderSidebar(student, selectedTab);
+            },
+          });
+        });
+      });
+      awardSidebar.querySelectorAll('.pupil-history__remove').forEach((remove) => {
+        remove.addEventListener('click', () => {
+          const idx = Number(remove.closest('.pupil-history__item').dataset.idx);
+          const entry = student.history?.[idx];
+          if (!entry) return;
+          const apply = () => {
+            student.history.splice(idx, 1);
+            const pts = entry.points || 1;
+            if (entry.type === 'positive') student.positive = Math.max(0, student.positive - pts);
+            else student.negative = Math.max(0, student.negative - pts);
+            const posScore = student.card?.querySelector('.pupil-score--positive');
+            const negScore = student.card?.querySelector('.pupil-score--negative');
+            if (posScore) posScore.textContent = student.positive;
+            if (negScore) negScore.textContent = student.negative;
+            renderSidebar(student, selectedTab);
+          };
+          if (entry.detention) openRemoveConfirm(entry, apply);
+          else apply();
         });
       });
     }
@@ -106,12 +247,14 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
         student.positive += 1;
         const score = student.card?.querySelector('.pupil-score--positive');
         if (score) score.textContent = student.positive;
+        recordAward(student, { type: 'positive', icon: '✓', label: 'Answered correctly' });
         renderSidebar(student, 'qa');
       });
       incorrect.addEventListener('click', () => {
         student.negative += 1;
         const score = student.card?.querySelector('.pupil-score--negative');
         if (score) score.textContent = student.negative;
+        recordAward(student, { type: 'negative', icon: '✗', label: 'Answered incorrectly' });
         renderSidebar(student, 'qa');
       });
     }
@@ -422,7 +565,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     const negative = (index + 1) % 4;
     const detentions = todayDetentions(index);
     const needs = pupilNeeds(index);
-    const student = { name, initials, positive, negative, needs, timetable: buildStudentTimetable(className), ...(thaiStudentDetails[name] || {}) };
+    const student = { name, initials, positive, negative, needs, history: seedPupilHistory(index), timetable: buildStudentTimetable(className), ...(thaiStudentDetails[name] || {}) };
     const detentionTile = detentions.length ? '<button class="pupil-tag pupil-tag--detention has-detention" type="button" aria-label="View today’s detentions">◷</button>' : '<span class="pupil-tag is-inactive"></span>';
     const needTile = (label) => `<span class="pupil-tag${needs[label] ? '' : ' is-inactive'}">${needs[label] ? label : ''}</span>`;
     card.innerHTML = `<div class="pupil-card__top"><div class="pupil-card__header"><span class="pupil-photo" aria-label="${name} profile picture">${initials}</span><span class="pupil-scores"><span class="pupil-score pupil-score--positive">${positive}</span><span class="pupil-score pupil-score--negative">${negative}</span></span></div><div class="pupil-card__name">${name}</div></div><div class="pupil-card__details" hidden>${needTile('PP')}${needTile('FSM')}${needTile('SEN')}${needTile('EAL')}${needTile('LAC')}${needTile('EHCP')}${needTile('PIP')}${detentionTile}</div>`;
@@ -484,20 +627,27 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     const body = awardSidebar.querySelector('.sidebar-body');
     const isPositive = type === 'positive';
     const awardNames = getBehaviourAwardPairs(type);
-    body.innerHTML = `<div class="bulk-award-summary">Applying to ${selected.length} selected pupil${selected.length === 1 ? '' : 's'}.</div><div class="award-icon-grid">${awardNames.map(([icon, label, points]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button" data-points="${points}">${points > 1 ? `<b class="award-icon__points">${points}</b>` : ''}${icon}<span>${label}</span></button>`).join('')}</div>`;
+    body.innerHTML = `<div class="bulk-award-summary">Applying to ${selected.length} selected pupil${selected.length === 1 ? '' : 's'}.</div><div class="award-icon-grid">${awardNames.map(([icon, label, points]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button" data-points="${points}" data-icon="${icon}" data-label="${label}">${points > 1 ? `<b class="award-icon__points">${points}</b>` : ''}${icon}<span>${label}</span></button>`).join('')}</div>`;
     body.querySelectorAll('.award-icon').forEach((button) => {
       button.addEventListener('click', () => {
-        const label = button.querySelector('span').textContent;
+        const label = button.dataset.label;
         const points = Number(button.dataset.points) || 1;
-        selected.forEach((student) => {
-          if (isPositive) student.positive += points; else student.negative += points;
-          const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
-          if (score) score.textContent = isPositive ? student.positive : student.negative;
+        openAwardModal({
+          type, icon: button.dataset.icon, label,
+          subject: `${selected.length} pupil${selected.length === 1 ? '' : 's'} · ${points} point${points === 1 ? '' : 's'} each`,
+          onConfirm: ({ reason, detention }) => {
+            selected.forEach((student) => {
+              if (isPositive) student.positive += points; else student.negative += points;
+              const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
+              if (score) score.textContent = isPositive ? student.positive : student.negative;
+              recordAward(student, { type, icon: button.dataset.icon, label, reason, detention, points });
+            });
+            view.querySelectorAll('.pupil-card').forEach((card) => card.classList.remove('is-selected'));
+            refreshAttendanceHighlights();
+            awardSidebar.hidden = true;
+            classToast(`${label} awarded to ${selected.length} pupil${selected.length === 1 ? '' : 's'}`);
+          },
         });
-        view.querySelectorAll('.pupil-card').forEach((card) => card.classList.remove('is-selected'));
-        refreshAttendanceHighlights();
-        awardSidebar.hidden = true;
-        classToast(`${label} awarded to ${selected.length} pupil${selected.length === 1 ? '' : 's'}`);
       });
     });
   }
