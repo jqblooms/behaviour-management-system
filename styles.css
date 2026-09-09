@@ -740,7 +740,7 @@ body {
 .device--mobile .coming-up { grid-column: 1 / -1; grid-row: 2; width: 100%; min-width: 0; height: 28px; }
 .device--mobile .date-selector::-webkit-calendar-picker-indicator { width: 14px; height: 14px; margin: 0; padding: 0; }
 .device--mobile :is(input, select, textarea, button) { max-width: 100%; }
-.device--mobile .mobile-menu { max-height: calc(100% - 36px); overflow-y: auto; }
+.device--mobile .mobile-menu { max-height: calc(200cqw - max(36px, calc(3 * clamp(10px, 1vw, 14px)))); overflow-y: auto; }
 .device--mobile .register-name { min-width: 0; font-size: clamp(8px, 2.8cqw, 11px); line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
 .device--mobile .det-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .device--mobile .det-tabs::-webkit-scrollbar { display: none; }
