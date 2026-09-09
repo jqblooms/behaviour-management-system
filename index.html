@@ -30,6 +30,15 @@
               <a href="#detentions" data-page="Detentions">Detentions</a>
               <a href="#admin" data-page="Admin">Admin</a>
             </div>
+            <select class="role-switcher" aria-label="Switch view">
+              <option value="teacher">Teacher view</option>
+              <option value="student">Student view</option>
+              <option value="parent">Parent view</option>
+            </select>
+            <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="desktop-menu" hidden>
+              <span></span><span></span><span></span>
+            </button>
+            <div class="mobile-menu" id="desktop-menu" hidden></div>
           </nav>
           <div class="screen-content" aria-live="polite"></div>
         </div>
@@ -43,6 +52,11 @@
               <span class="brand__mark" aria-label="School logo placeholder"><i></i><i></i><i></i><i></i></span>
               <b>Classroom</b>
             </a>
+            <select class="role-switcher" aria-label="Switch view">
+              <option value="teacher">Teacher view</option>
+              <option value="student">Student view</option>
+              <option value="parent">Parent view</option>
+            </select>
             <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">
               <span></span><span></span><span></span>
             </button>
@@ -77,6 +91,11 @@
               <a href="#detentions" data-page="Detentions">Detentions</a>
               <a href="#admin" data-page="Admin">Admin</a>
           </div>
+          <select class="role-switcher" aria-label="Switch view">
+            <option value="teacher">Teacher view</option>
+            <option value="student">Student view</option>
+            <option value="parent">Parent view</option>
+          </select>
           <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="fill-menu" hidden>
             <span></span><span></span><span></span>
           </button>
@@ -96,6 +115,7 @@
     <script src="attendance.js"></script>
     <script src="class-view.js"></script>
     <script src="student-overview.js"></script>
+    <script src="family-view.js"></script>
     <script src="activity.js"></script>
     <script src="admin.js"></script>
     <script src="script.js"></script>

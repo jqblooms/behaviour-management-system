@@ -14,16 +14,75 @@ const pageRenderers = {
   Admin: (content) => showAdminPage(content),
 };
 
+const ROLE_NAV = {
+  student: ['Attendance', 'Behaviour'],
+  parent: ['Attendance', 'Behaviour', 'Messages'],
+};
+
+function roleDefaultPage(role) {
+  return role === 'teacher' ? 'Classes' : ROLE_NAV[role][0];
+}
+
 function showPage(content, page) {
   clearInterval(content._activityTimer);
   content._activityTimer = undefined;
   content.replaceChildren();
+  const device = content.closest('.device');
+  const role = device?.dataset.role || 'teacher';
+  if (role !== 'teacher') return showFamilyPage(content, page, role);
   const render = pageRenderers[page];
   if (render) return render(content);
   const placeholder = document.createElement('div');
   placeholder.className = 'placeholder-page';
   placeholder.textContent = page;
   content.append(placeholder);
+}
+
+function navigateTo(device, page) {
+  const content = device.querySelector('.screen-content');
+  device.dataset.currentPage = page;
+  showPage(content, page);
+  device.querySelectorAll('[data-page]').forEach((item) => item.classList.toggle('is-active', item.dataset.page === page));
+  const menu = device.querySelector('.mobile-menu');
+  const toggle = device.querySelector('.menu-toggle');
+  if (menu && toggle) {
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+  }
+}
+
+function wireNavLink(device, link) {
+  if (link._navWired) return;
+  link._navWired = true;
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    navigateTo(device, link.dataset.page);
+  });
+}
+
+function applyRole(device, role) {
+  device.dataset.role = role;
+  const linksContainer = device.querySelector('.nav-links');
+  const menu = device.querySelector('.mobile-menu');
+  const host = linksContainer || menu;
+  if (!host) return;
+  const list = role === 'teacher'
+    ? device._teacherLinks
+    : ROLE_NAV[role].map((name) => ({ page: name, href: `#${name.toLowerCase()}`, label: name }));
+  host.replaceChildren(...list.map((item) => {
+    const link = document.createElement('a');
+    link.href = item.href;
+    link.dataset.page = item.page;
+    link.textContent = item.label;
+    wireNavLink(device, link);
+    return link;
+  }));
+  if (linksContainer && menu) menu.replaceChildren();
+  const switcher = device.querySelector('.role-switcher');
+  if (switcher) switcher.value = role;
+  device._relayoutNav?.();
+  navigateTo(device, list[0].page);
 }
 
 function setupResponsiveNav(device) {
@@ -34,39 +93,40 @@ function setupResponsiveNav(device) {
   const brand = nav?.querySelector('.brand');
   if (!nav || !linksContainer || !menu || !toggle) return;
 
-  const orderedLinks = [...linksContainer.children];
-
   function closeMenu() {
     menu.hidden = true;
     toggle.setAttribute('aria-expanded', 'false');
     toggle.setAttribute('aria-label', 'Open navigation');
   }
 
+  const switcher = nav.querySelector('.role-switcher');
+
   function relayout() {
     const navWidth = nav.clientWidth;
     if (!navWidth) return;
-    orderedLinks.forEach((link) => linksContainer.append(link));
+    const links = [...linksContainer.children, ...menu.children];
+    links.forEach((link) => linksContainer.append(link));
     menu.replaceChildren();
     closeMenu();
 
-    const brandWidth = brand ? brand.offsetWidth : 0;
-    const linkWidths = orderedLinks.map((link) => link.offsetWidth);
+    const fixedWidth = (brand ? brand.offsetWidth : 0) + (switcher ? switcher.offsetWidth + 6 : 0);
+    const linkWidths = links.map((link) => link.offsetWidth);
     const totalLinks = linkWidths.reduce((sum, width) => sum + width, 0);
 
-    if (brandWidth + totalLinks <= navWidth) {
+    if (fixedWidth + totalLinks <= navWidth) {
       toggle.hidden = true;
       return;
     }
 
     toggle.hidden = false;
-    const available = navWidth - brandWidth - toggle.offsetWidth - 8;
+    const available = navWidth - fixedWidth - toggle.offsetWidth - 8;
     let used = 0;
-    let cut = orderedLinks.length;
-    for (let i = 0; i < orderedLinks.length; i += 1) {
+    let cut = links.length;
+    for (let i = 0; i < links.length; i += 1) {
       used += linkWidths[i];
       if (used > available) { cut = i; break; }
     }
-    for (let i = cut; i < orderedLinks.length; i += 1) menu.append(orderedLinks[i]);
+    for (let i = cut; i < links.length; i += 1) menu.append(links[i]);
   }
 
   let scheduled = false;
@@ -76,38 +136,40 @@ function setupResponsiveNav(device) {
     requestAnimationFrame(() => { scheduled = false; relayout(); });
   }
 
+  device._relayoutNav = relayout;
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(schedule).observe(nav);
   window.addEventListener('resize', schedule);
   relayout();
 }
 
 function initializeDevice(device) {
-  const content = device.querySelector('.screen-content');
   const toggle = device.querySelector('.menu-toggle');
   const menu = device.querySelector('.mobile-menu');
+  device.dataset.role = 'teacher';
   device.dataset.currentPage = 'Classes';
 
-  device.querySelectorAll('[data-page]').forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      const page = link.dataset.page;
-      device.dataset.currentPage = page;
-      showPage(content, page);
-      device.querySelectorAll('[data-page]').forEach((item) => item.classList.toggle('is-active', item.dataset.page === page));
-      if (menu) {
-        menu.hidden = true;
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Open navigation');
-      }
-    });
-  });
+  const navHost = device.querySelector('.nav-links') || device.querySelector('.mobile-menu');
+  device._teacherLinks = [...navHost.querySelectorAll('a[data-page]')].map((link) => ({
+    page: link.dataset.page,
+    href: link.getAttribute('href') || `#${link.dataset.page.toLowerCase()}`,
+    label: link.textContent.trim(),
+  }));
 
-  if (toggle) {
+  device.querySelectorAll('[data-page]').forEach((link) => wireNavLink(device, link));
+
+  if (toggle && menu) {
     toggle.addEventListener('click', () => {
       const open = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!open));
       toggle.setAttribute('aria-label', open ? 'Open navigation' : 'Close navigation');
       menu.hidden = open;
+    });
+  }
+
+  const switcher = device.querySelector('.role-switcher');
+  if (switcher) {
+    switcher.addEventListener('change', () => {
+      document.querySelectorAll('.device').forEach((other) => applyRole(other, switcher.value));
     });
   }
 
@@ -124,7 +186,7 @@ function syncVisibleDevices() {
     const active = fillMode ? device.classList.contains('device--fill') : !device.classList.contains('device--fill');
     const content = device.querySelector('.screen-content');
     if (active) {
-      showPage(content, device.dataset.currentPage || 'Classes');
+      showPage(content, device.dataset.currentPage || roleDefaultPage(device.dataset.role || 'teacher'));
     } else {
       clearInterval(content._activityTimer);
       content._activityTimer = undefined;
