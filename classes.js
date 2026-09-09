@@ -51,12 +51,14 @@ function scheduleBar(onOpen) {
   dateSelector.setAttribute('aria-label', 'Select timetable date');
   const upcoming = document.createElement('div');
   upcoming.className = 'coming-up';
-  upcoming.innerHTML = '<span class="coming-up__label">Coming up</span><div class="upcoming-list"></div>';
+  upcoming.innerHTML = '<span class="coming-up__label">Coming up</span><button class="upcoming-nav upcoming-nav--previous" type="button" aria-label="Show earlier upcoming lessons">‹</button><div class="upcoming-list"></div><button class="upcoming-nav upcoming-nav--next" type="button" aria-label="Show later upcoming lessons">›</button>';
   const list = upcoming.querySelector('.upcoming-list');
+  const previous = upcoming.querySelector('.upcoming-nav--previous');
+  const next = upcoming.querySelector('.upcoming-nav--next');
   let activeEntry;
   let lessonOffset = 0;
 
-  const UPCOMING_MIN = 52;
+  const UPCOMING_MIN = 88;
   function upcomingGap() { const value = parseFloat(getComputedStyle(list).columnGap); return Number.isFinite(value) ? value : 7; }
   function visibleCount() {
     const width = list.clientWidth;
@@ -66,10 +68,10 @@ function scheduleBar(onOpen) {
   }
 
   function renderUpcoming() {
-    upcoming.querySelectorAll('.upcoming-nav').forEach((button) => button.remove());
     list.replaceChildren();
     const visible = Math.min(visibleCount(), activeEntry.classes.length) || 1;
-    if (lessonOffset > activeEntry.classes.length - 1) lessonOffset = Math.max(0, activeEntry.classes.length - 1);
+    const lastOffset = Math.max(0, activeEntry.classes.length - visible);
+    lessonOffset = Math.min(lessonOffset, lastOffset);
     activeEntry.classes.slice(lessonOffset, lessonOffset + visible).forEach(([className, time], index) => {
       const item = document.createElement('button');
       item.type = 'button';
@@ -78,31 +80,19 @@ function scheduleBar(onOpen) {
       if (onOpen) item.addEventListener('click', () => onOpen(className));
       list.append(item);
     });
-    if (activeEntry.classes.length > visible) {
-      const previous = document.createElement('button');
-      previous.className = 'upcoming-nav';
-      previous.type = 'button';
-      previous.disabled = lessonOffset === 0;
-      previous.setAttribute('aria-label', 'Show earlier upcoming lessons');
-      previous.textContent = '‹';
-      previous.addEventListener('click', () => {
-        lessonOffset = Math.max(0, lessonOffset - visible);
-        renderUpcoming();
-      });
-      const next = document.createElement('button');
-      next.className = 'upcoming-nav';
-      next.type = 'button';
-      next.disabled = lessonOffset + visible >= activeEntry.classes.length;
-      next.setAttribute('aria-label', 'Show later upcoming lessons');
-      next.textContent = '›';
-      next.addEventListener('click', () => {
-        lessonOffset += visible;
-        renderUpcoming();
-      });
-      list.before(previous);
-      upcoming.append(next);
-    }
+    previous.disabled = lessonOffset === 0;
+    next.disabled = lessonOffset >= lastOffset;
   }
+
+  previous.addEventListener('click', () => {
+    lessonOffset = Math.max(0, lessonOffset - visibleCount());
+    renderUpcoming();
+  });
+  next.addEventListener('click', () => {
+    const visible = visibleCount();
+    lessonOffset = Math.min(Math.max(0, activeEntry.classes.length - visible), lessonOffset + visible);
+    renderUpcoming();
+  });
 
   function selectDay(selected, button) {
     picker.querySelectorAll('.day-choice').forEach((item) => item.classList.toggle('is-selected', item === button));
