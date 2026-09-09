@@ -47,6 +47,8 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   const awardSidebar = view.querySelector('.award-sidebar');
   const overviewButton = awardSidebar.querySelector('.award-sidebar__overview');
 
+  if (className === 'All pupils') view.querySelector('.attendance')?.remove();
+
   let searchInput;
   if (searchable) {
     const searchBar = document.createElement('div');
@@ -507,7 +509,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     }
     awardSidebar.hidden = true;
   });
-  view.querySelector('.attendance').addEventListener('click', () => { openAttendanceModal(); });
+  view.querySelector('.attendance')?.addEventListener('click', () => { openAttendanceModal(); });
   view.querySelector('.random-pupil').addEventListener('click', async () => {
     const cards = [...view.querySelectorAll('.pupil-card')];
     view.querySelectorAll('.pupil-card').forEach((card) => card.classList.remove('is-selected', 'is-random'));
