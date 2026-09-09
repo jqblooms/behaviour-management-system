@@ -426,7 +426,7 @@ body {
 .device--mobile .analytics-sidebar__header { display: flex; }
 .analytics-main { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; }
 .analytics-mainbar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; padding: 6px 12px; border-bottom: 1px solid #e2e9ec; background: #fff; }
-.analytics-filter-toggle { display: none; height: 26px; padding: 0 10px; border: 1px solid #cfdde3; border-radius: 3px; background: #fff; color: #319bc3; font: 700 11px "Segoe UI", Arial, sans-serif; cursor: pointer; }
+.analytics-filter-toggle { display: none; align-items: center; justify-content: center; height: 26px; padding: 0 10px; border: 1px solid #cfdde3; border-radius: 3px; background: #fff; color: #319bc3; font: 700 11px/1 "Segoe UI", Arial, sans-serif; cursor: pointer; }
 .analytics-title { font-weight: 700; color: #425864; font-size: 14px; }
 .analytics-export-group { display: flex; gap: 6px; margin-left: auto; }
 .analytics-export { height: 28px; padding: 0 10px; border: 1px solid #cfdde3; border-radius: 3px; background: #fff; color: #319bc3; font: 700 11px "Segoe UI", Arial, sans-serif; cursor: pointer; }
