@@ -20,7 +20,7 @@ function hwPad(n) { return String(n).padStart(2, '0'); }
 function hwDateStr(d) { return `${d.getFullYear()}-${hwPad(d.getMonth() + 1)}-${hwPad(d.getDate())}`; }
 function hwToday() { return hwDateStr(new Date()); }
 function hwPupilClass(name) { return classes[pupilNames.indexOf(name) % classes.length][0]; }
-function hwClassRoster(className) { return pupilNames.slice(0, (classes.find(([name]) => name === className)?.[1] ?? 12)); }
+function hwClassRoster(className) { return getClassRoster(className); }
 function hwSeeded(seed) { let s = seed; return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
 
 function loadHomework() {

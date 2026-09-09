@@ -12,7 +12,8 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   let roomLayoutActive = false;
   let showingList = !seatingPlanDefault;
   let currentRoomName = null;
-  const rosterSize = rosterSizeOverride ?? classes.find(([name]) => name === className)?.[1] ?? 12;
+  const rosterNames = className === 'All pupils' ? pupilNames : getClassRoster(className);
+  const rosterSize = Math.min(rosterSizeOverride ?? rosterNames.length, rosterNames.length);
   let sensitiveVisible = false;
   let attendanceTaken = false;
   let registerSubmitted = false;
@@ -74,7 +75,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
 
   function renderSidebar(student, selectedTab = 'positive') {
     const isPositive = selectedTab === 'positive';
-    const awardNames = isPositive ? [['↑', 'Merit'], ['♥', 'Caring'], ['★', 'Star student'], ['✓', 'On task'], ['☀', 'Participation'], ['⚑', 'Teamwork'], ['1', 'Level 1'], ['2', 'Level 2']] : [['!', 'Warning'], ['↺', 'Retry'], ['⊘', 'Off task'], ['⌁', 'Disruption'], ['↯', 'Late work'], ['?', 'No equipment'], ['1', 'Level 1'], ['2', 'Level 2']];
+    const awardNames = getBehaviourAwardPairs(isPositive ? 'positive' : 'negative');
     const tabs = [['positive', 'Positive'], ['negative', 'Negative'], ['sen', 'SEN'], ['notes', 'Notes'], ['qa', 'Q+A']];
     let content = '';
     if (selectedTab === 'sen') content = sensitiveVisible ? `<p class="sen-empty">${Object.entries(student.needs).filter(([, enabled]) => enabled).map(([label]) => label).join(' · ') || 'No recorded indicators'}</p>` : '<p class="sen-empty">Pupil information is hidden. Use “Show pupil info” to reveal it.</p>';
@@ -377,7 +378,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     if (!showingList && currentRoomName) {
       const cardsByName = {};
       studentRecords.forEach((student) => { cardsByName[student.name] = student.card; });
-      const ok = renderRoomSeating(roomLayout, currentRoomName, cardsByName, pupilNames.slice(0, rosterSize), () => renderSeatArea());
+      const ok = renderRoomSeating(roomLayout, currentRoomName, cardsByName, rosterNames.slice(0, rosterSize), () => renderSeatArea());
       if (ok) { seatGrid.classList.add('is-room'); roomLayoutActive = true; }
     }
     view.classList.toggle('class-view--list', showingList);
@@ -403,7 +404,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     view.querySelectorAll('.pupil-card__details').forEach((details) => { details.hidden = !sensitiveVisible; });
   }
 
-  pupilNames.slice(0, rosterSize).forEach((name, index) => {
+  rosterNames.slice(0, rosterSize).forEach((name, index) => {
     const card = document.createElement('article');
     card.className = 'pupil-card';
     const initials = name.split(' ').map((part) => part[0]).join('');
@@ -471,7 +472,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     awardSidebar.querySelector('.award-sidebar__bar span').textContent = `Award ${type} · ${selected.length} pupil${selected.length === 1 ? '' : 's'}`;
     const body = awardSidebar.querySelector('.sidebar-body');
     const isPositive = type === 'positive';
-    const awardNames = activityAwards[type];
+    const awardNames = getBehaviourAwardPairs(type);
     body.innerHTML = `<div class="bulk-award-summary">Applying to ${selected.length} selected pupil${selected.length === 1 ? '' : 's'}.</div><div class="award-icon-grid">${awardNames.map(([icon, label]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button">${icon}<span>${label}</span></button>`).join('')}</div>`;
     body.querySelectorAll('.award-icon').forEach((button) => {
       button.addEventListener('click', () => {
@@ -545,4 +546,3 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   setupHomeworkMarking(view, className, studentRecords);
   content.append(view);
 }
-

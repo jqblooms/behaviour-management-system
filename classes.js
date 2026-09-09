@@ -3,6 +3,34 @@ const classes = [
   ['Y7/Cs', 26], ['Y8/Cs', 24], ['Y9/Cs', 22], ['Y10/Cs', 20], ['Y11/Cs', 18], ['Y12/Cs', 10], ['Y13/Cs', 8],
 ];
 
+const IMPORTED_CLASSES_KEY = 'behaviour-management-system-imported-classes';
+
+function getImportedClasses() { return readStoredArray(IMPORTED_CLASSES_KEY) ?? []; }
+
+function syncImportedClasses() {
+  getImportedClasses().forEach((record) => {
+    const existing = classes.find(([name]) => name === record.name);
+    if (existing) existing[1] = record.students.length;
+    else if (!existing) classes.push([record.name, record.students.length]);
+  });
+}
+
+function getClassRoster(className) {
+  const imported = getImportedClasses().find((record) => record.name === className);
+  if (imported) return imported.students.map((student) => student.name).filter(Boolean);
+  const size = classes.find(([name]) => name === className)?.[1] ?? 12;
+  return pupilNames.slice(0, size);
+}
+
+function importClassRecords(records) {
+  const byName = new Map(getImportedClasses().map((record) => [record.name, record]));
+  records.forEach((record) => byName.set(record.name, record));
+  writeStoredValue(IMPORTED_CLASSES_KEY, [...byName.values()]);
+  syncImportedClasses();
+}
+
+syncImportedClasses();
+
 const week = [
   { day: 'MON', date: '7', classes: [['Y9/Cs', '09:00'], ['Y8/Cs', '10:10'], ['Y7/Cs', '11:20'], ['Y12/Cs', '13:30'], ['Y5/Cs', '14:40'], ['Y10/Cs', '15:30']] },
   { day: 'TUE', date: '8', classes: [['Y8/Cs', '09:00'], ['Y10/Cs', '10:10'], ['Y3/Cs', '11:20'], ['Y11/Cs', '13:30']] },

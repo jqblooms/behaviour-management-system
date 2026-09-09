@@ -1,7 +1,3 @@
-const activityAwards = {
-  positive: [['↑', 'Merit'], ['♥', 'Caring'], ['★', 'Star student'], ['✓', 'On task'], ['☀', 'Participation'], ['⚑', 'Teamwork'], ['1', 'Level 1'], ['2', 'Level 2']],
-  negative: [['!', 'Warning'], ['↺', 'Retry'], ['⊘', 'Off task'], ['⌁', 'Disruption'], ['↯', 'Late work'], ['?', 'No equipment'], ['1', 'Level 1'], ['2', 'Level 2']],
-};
 const activityTeachers = ['Ms Carter', 'Mr Hughes', 'Ms Patel', 'Mr Singh', 'Mrs Green', 'Dr Okoro'];
 const activityRooms = ['Computer Room 645', 'Computer Room 612', 'Innovation Lab', 'Library Suite', 'Science Lab 101'];
 
@@ -17,7 +13,8 @@ function buildInitialActivityLogs(nowMs) {
     const studentName = pupilNames[(i * 7 + 3) % pupilNames.length];
     const className = classes[(i * 5) % classes.length][0];
     const type = i % 3 === 0 ? 'negative' : 'positive';
-    const award = activityAwards[type][(i * 3) % activityAwards[type].length];
+    const awards = getBehaviourAwardPairs(type);
+    const award = awards[(i * 3) % awards.length] ?? ['•', type === 'positive' ? 'Positive' : 'Negative'];
     const hasDetention = type === 'negative' && i % 6 === 0;
     logs.push({
       id: `seed-${i}`,
@@ -193,7 +190,8 @@ function showActivityPage(content) {
     const studentName = pupilNames[Math.floor(Math.random() * pupilNames.length)];
     const className = classes[Math.floor(Math.random() * classes.length)][0];
     const type = Math.random() < 0.6 ? 'positive' : 'negative';
-    const award = activityAwards[type][Math.floor(Math.random() * activityAwards[type].length)];
+    const awards = getBehaviourAwardPairs(type);
+    const award = awards[Math.floor(Math.random() * awards.length)] ?? ['•', type === 'positive' ? 'Positive' : 'Negative'];
     const notePool = {
       positive: ['Excellent effort this lesson.', 'Great contribution to the class discussion.', 'Persevered with the task.', 'Helped a peer in class.'],
       negative: ['Reminded repeatedly but continued.', 'Distracted the table next to them.', 'Did not complete the task.', 'Called out during the lesson.'],
@@ -226,4 +224,3 @@ function showActivityPage(content) {
   renderList();
   content.append(page);
 }
-
