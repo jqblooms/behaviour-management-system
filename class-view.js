@@ -32,7 +32,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     </div>
     <div class="class-seat-grid"></div>
     <div class="award-panel" hidden><button class="award-positive" type="button">Award positive</button><button class="award-negative" type="button">Award negative</button></div>
-    <aside class="award-sidebar" hidden aria-label="Pupil details"><div class="award-sidebar__bar"><span>Pupil</span><button class="award-sidebar__close" type="button" aria-label="Close pupil sidebar">×</button></div><div class="sidebar-body"></div></aside>
+    <aside class="award-sidebar" hidden aria-label="Pupil details"><div class="award-sidebar__bar"><span>Pupil</span><button class="award-sidebar__overview" type="button" hidden>View student overview</button><button class="award-sidebar__close" type="button" aria-label="Close pupil sidebar">×</button></div><div class="sidebar-body"></div></aside>
     <div class="sensitive-modal" hidden><div class="sensitive-modal__card"><h2>Display pupil information?</h2><p>This will reveal sensitive pupil indicators on the seating plan. Only continue when it is appropriate to view this information.</p><div class="sensitive-modal__actions"><button class="cancel" type="button">Cancel</button><button class="confirm" type="button">Display information</button></div></div></div>
     <div class="sensitive-modal room-modal" hidden><div class="sensitive-modal__card"><h2>Add a room</h2><p>Enter the name for the new room.</p><form class="room-form"><input class="room-name-input" type="text" maxlength="50" required placeholder="e.g. Science Lab 101" aria-label="Room name"><div class="sensitive-modal__actions"><button class="room-cancel" type="button">Cancel</button><button class="confirm" type="submit">Add room</button></div></form></div></div>
     <div class="sensitive-modal attendance-modal" hidden><div class="sensitive-modal__card"><h2>Take attendance</h2><p>Select the period you want to record attendance for ${className}.</p><select class="attendance-select" aria-label="Attendance period"></select><div class="sensitive-modal__actions"><button class="attendance-cancel" type="button">Cancel</button><button class="confirm" type="button">Open register</button></div></div></div>`;
@@ -45,6 +45,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   const attendanceModal = view.querySelector('.attendance-modal');
   const viewToggle = view.querySelector('.view-toggle');
   const awardSidebar = view.querySelector('.award-sidebar');
+  const overviewButton = awardSidebar.querySelector('.award-sidebar__overview');
 
   let searchInput;
   if (searchable) {
@@ -81,7 +82,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     if (selectedTab === 'sen') content = sensitiveVisible ? `<p class="sen-empty">${Object.entries(student.needs).filter(([, enabled]) => enabled).map(([label]) => label).join(' · ') || 'No recorded indicators'}</p>` : '<p class="sen-empty">Pupil information is hidden. Use “Show pupil info” to reveal it.</p>';
     else if (selectedTab === 'notes') content = '<textarea class="sidebar-note" placeholder="Write a note about this pupil…"></textarea>';
     else if (selectedTab === 'qa') content = '<div class="quick-answer"><button type="button" aria-label="Answer correct"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4V10h3Zm2 10h8.5a2 2 0 0 0 1.9-1.4l1.6-5A2 2 0 0 0 19.1 11H15l.5-4.1A2 2 0 0 0 13.5 4L9 10v10Z"/></svg></button><button type="button" aria-label="Answer incorrect"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v10H4V4h3Zm2 0h8.5a2 2 0 0 1 1.9 1.4l1.6 5A2 2 0 0 1 19.1 13H15l.5 4.1a2 2 0 0 1-2 2.9L9 14V4Z"/></svg></button></div>';
-    else content = `<div class="award-icon-grid">${awardNames.map(([icon, label]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button">${icon}<span>${label}</span></button>`).join('')}</div>`;
+    else content = `<div class="award-icon-grid">${awardNames.map(([icon, label, points]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button" data-points="${points}">${points > 1 ? `<b class="award-icon__points">${points}</b>` : ''}${icon}<span>${label}</span></button>`).join('')}</div>`;
     awardSidebar.querySelector('.sidebar-body').innerHTML = `<div class="student-summary"><span class="pupil-photo">${student.initials}</span><span class="summary-positive">${student.positive}</span><span class="summary-name">${student.name}</span><span class="summary-negative">${student.negative}</span></div><div class="sidebar-tab-nav"><button class="sidebar-tab-scroll" type="button" data-direction="-1" aria-label="Show earlier tabs">‹</button><div class="sidebar-tabs">${tabs.map(([key, label]) => `<button class="sidebar-tab${key === selectedTab ? ' is-active' : ''}" type="button" data-tab="${key}">${label}</button>`).join('')}</div><button class="sidebar-tab-scroll" type="button" data-direction="1" aria-label="Show later tabs">›</button></div><div class="sidebar-content">${content}</div>`;
     awardSidebar.querySelectorAll('.sidebar-tab').forEach((tab) => tab.addEventListener('click', () => renderSidebar(student, tab.dataset.tab)));
     const tabStrip = awardSidebar.querySelector('.sidebar-tabs');
@@ -89,7 +90,8 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     if (selectedTab === 'positive' || selectedTab === 'negative') {
       awardSidebar.querySelectorAll('.award-icon').forEach((button) => {
         button.addEventListener('click', () => {
-          if (isPositive) student.positive += 1; else student.negative += 1;
+          const points = Number(button.dataset.points) || 1;
+          if (isPositive) student.positive += points; else student.negative += points;
           const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
           if (score) score.textContent = isPositive ? student.positive : student.negative;
           renderSidebar(student, selectedTab);
@@ -116,6 +118,11 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
   function showSidebar(student) {
     awardSidebar.hidden = false;
     awardSidebar.querySelector('.award-sidebar__bar span').textContent = 'Pupil';
+    overviewButton.hidden = false;
+    overviewButton.onclick = () => {
+      awardSidebar.hidden = true;
+      showStudentOverview(content, student.name, className, () => showClassView(content, className, rosterSizeOverride, searchable));
+    };
     renderSidebar(student);
   }
 
@@ -278,6 +285,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     registerSubmitted = false;
     activeRegisterSession = session;
     awardSidebar.hidden = false;
+    overviewButton.hidden = true;
     awardSidebar.querySelector('.award-sidebar__bar span').textContent = `Register · ${className} · ${session.label}`;
     const body = awardSidebar.querySelector('.sidebar-body');
     body.innerHTML = '<div class="register-legend">/ Present (marks PM present automatically) · \\ Present PM · O Unauthorised · N Absent · L Late</div><div class="register-list"></div><button class="submit-register" type="button">Submit register</button>';
@@ -469,16 +477,18 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     view.querySelector('.award-panel').hidden = true;
     view.querySelector('.multi-award').classList.remove('is-active');
     awardSidebar.hidden = false;
+    overviewButton.hidden = true;
     awardSidebar.querySelector('.award-sidebar__bar span').textContent = `Award ${type} · ${selected.length} pupil${selected.length === 1 ? '' : 's'}`;
     const body = awardSidebar.querySelector('.sidebar-body');
     const isPositive = type === 'positive';
     const awardNames = getBehaviourAwardPairs(type);
-    body.innerHTML = `<div class="bulk-award-summary">Applying to ${selected.length} selected pupil${selected.length === 1 ? '' : 's'}.</div><div class="award-icon-grid">${awardNames.map(([icon, label]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button">${icon}<span>${label}</span></button>`).join('')}</div>`;
+    body.innerHTML = `<div class="bulk-award-summary">Applying to ${selected.length} selected pupil${selected.length === 1 ? '' : 's'}.</div><div class="award-icon-grid">${awardNames.map(([icon, label, points]) => `<button class="award-icon${isPositive ? '' : ' award-icon--negative'}" type="button" data-points="${points}">${points > 1 ? `<b class="award-icon__points">${points}</b>` : ''}${icon}<span>${label}</span></button>`).join('')}</div>`;
     body.querySelectorAll('.award-icon').forEach((button) => {
       button.addEventListener('click', () => {
         const label = button.querySelector('span').textContent;
+        const points = Number(button.dataset.points) || 1;
         selected.forEach((student) => {
-          if (isPositive) student.positive += 1; else student.negative += 1;
+          if (isPositive) student.positive += points; else student.negative += points;
           const score = student.card?.querySelector(isPositive ? '.pupil-score--positive' : '.pupil-score--negative');
           if (score) score.textContent = isPositive ? student.positive : student.negative;
         });
