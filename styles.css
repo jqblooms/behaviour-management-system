@@ -70,7 +70,7 @@ body {
 .navbar {
   display: flex;
   position: relative;
-  z-index: 2;
+  z-index: 50;
   height: calc(3 * clamp(10px, 1vw, 14px));
   min-height: 36px;
   background: var(--blue);
