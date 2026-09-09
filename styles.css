@@ -806,7 +806,12 @@ body {
 .student-overview__id strong { display: block; color: #425965; font-size: 13px; }
 .student-overview__id span { display: block; color: #8a9aa4; font-size: 10px; }
 .student-overview__totals { margin-left: auto; flex: 0 0 auto; padding: 3px 9px; border-radius: 11px; background: #eef4f2; color: #4b7c6a; font-size: 10px; font-weight: 700; }
+.student-overview__filter-toggle { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid #cfdde3; border-radius: 3px; background: #fff; color: #56707c; font: 700 10px "Segoe UI", Arial, sans-serif; cursor: pointer; }
+.student-overview__filter-toggle:hover { background: #eef4f6; }
+.student-overview__filter-toggle .so-caret { font-size: 11px; line-height: 1; transition: transform .15s; }
+.student-overview.is-filters-collapsed .student-overview__filter-toggle .so-caret { transform: rotate(180deg); }
 .student-overview__filters { display: flex; flex-wrap: wrap; gap: 14px; flex: 0 0 auto; padding: 9px clamp(10px, 1.6vw, 18px); border-bottom: 1px solid #e2e9ec; background: #fff; }
+.student-overview.is-filters-collapsed .student-overview__filters { display: none; }
 .so-filter { display: flex; flex-direction: column; gap: 5px; }
 .so-filter__label { color: #7a8c96; font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .so-period { display: flex; gap: 5px; }

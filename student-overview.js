@@ -44,8 +44,9 @@ function showStudentOverview(content, studentName, className, returnTo) {
         <span>${knownClass}</span>
       </div>
       <span class="student-overview__totals" aria-live="polite"></span>
+      <button class="student-overview__filter-toggle" type="button" aria-expanded="true" aria-controls="so-filters">Filters <span class="so-caret" aria-hidden="true">⌃</span></button>
     </div>
-    <div class="student-overview__filters">
+    <div class="student-overview__filters" id="so-filters">
       <div class="so-filter">
         <span class="so-filter__label">Period</span>
         <div class="so-period">
@@ -101,6 +102,12 @@ function showStudentOverview(content, studentName, className, returnTo) {
 
   page.querySelector('.student-overview__back').addEventListener('click', () => {
     if (typeof returnTo === 'function') returnTo();
+  });
+
+  const filterToggle = page.querySelector('.student-overview__filter-toggle');
+  filterToggle.addEventListener('click', () => {
+    const collapsed = page.classList.toggle('is-filters-collapsed');
+    filterToggle.setAttribute('aria-expanded', String(!collapsed));
   });
 
   fromInput.addEventListener('change', () => { state.from = fromInput.value; recompute(true); });
