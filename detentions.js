@@ -50,15 +50,13 @@ function detentionSeeds() {
 }
 
 function getDetentions() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(DETENTION_STORE_KEY));
-    if (Array.isArray(parsed) && parsed.length) return parsed;
-  } catch {}
+  const stored = readStoredArray(DETENTION_STORE_KEY, { allowEmpty: false });
+  if (stored) return stored;
   const seeds = detentionSeeds();
   saveDetentions(seeds);
   return seeds;
 }
-function saveDetentions(detentions) { localStorage.setItem(DETENTION_STORE_KEY, JSON.stringify(detentions)); }
+function saveDetentions(detentions) { writeStoredValue(DETENTION_STORE_KEY, detentions); }
 
 function detEscape(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);

@@ -24,13 +24,9 @@ function hwClassRoster(className) { return pupilNames.slice(0, (classes.find(([n
 function hwSeeded(seed) { let s = seed; return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
 
 function loadHomework() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(HW_STORAGE_KEY));
-    if (Array.isArray(parsed)) return parsed;
-  } catch {}
-  return seedHomework();
+  return readStoredArray(HW_STORAGE_KEY) ?? seedHomework();
 }
-function saveHomework(items) { localStorage.setItem(HW_STORAGE_KEY, JSON.stringify(items)); }
+function saveHomework(items) { writeStoredValue(HW_STORAGE_KEY, items); }
 
 function seedHomework() {
   const rand = hwSeeded(424242);

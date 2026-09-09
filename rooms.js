@@ -43,15 +43,13 @@ function roomSeeds() {
 }
 
 function getRooms() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(ROOM_STORE_KEY));
-    if (Array.isArray(parsed) && parsed.length) return parsed;
-  } catch {}
+  const stored = readStoredArray(ROOM_STORE_KEY, { allowEmpty: false });
+  if (stored) return stored;
   const seeds = roomSeeds();
   saveRoomStore(seeds);
   return seeds;
 }
-function saveRoomStore(rooms) { localStorage.setItem(ROOM_STORE_KEY, JSON.stringify(rooms)); }
+function saveRoomStore(rooms) { writeStoredValue(ROOM_STORE_KEY, rooms); }
 function getRoomByName(name) { return getRooms().find((room) => room.name === name); }
 function addRoom(name) { const rooms = getRooms(); const room = { id: `room-${Date.now()}`, name, desks: [] }; rooms.push(room); saveRoomStore(rooms); return room; }
 function deleteRoomByName(name) { const rooms = getRooms().filter((room) => room.name !== name); saveRoomStore(rooms); return rooms; }
