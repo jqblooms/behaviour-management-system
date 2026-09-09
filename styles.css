@@ -632,6 +632,7 @@ body {
 .room-unseated-panel.is-collapsed .room-unseated__list { display: none; }
 .room-unseated-panel.is-collapsed .room-unseated__bar span { display: none; }
 .class-seat-grid.is-room { display: block; }
+.class-seat-grid:not(.is-room) > .class-room-layout { display: none; }
 .class-room-layout { min-width: 0; }
 .class-view--room .pupil-card { width: 68px; height: auto; min-height: 52px; padding: 3px 4px; gap: 1px; justify-content: center; border-radius: 3px; }
 .class-view--room .pupil-card__top { display: flex; flex-direction: column; flex: 0 0 auto; padding-bottom: 0; gap: 1px; }
