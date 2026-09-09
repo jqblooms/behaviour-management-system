@@ -103,7 +103,36 @@ function showActivityPage(content) {
   loadMore.textContent = 'Load more';
   loadMore.addEventListener('click', () => { state.visibleCount += 10; renderList(); });
 
-  page.append(toolbar, list, loadMore);
+  const removeModal = document.createElement('div');
+  removeModal.className = 'sensitive-modal activity-remove-modal';
+  removeModal.hidden = true;
+  removeModal.innerHTML = '<div class="sensitive-modal__card"><h2>Remove behaviour log?</h2><p class="activity-remove-modal__text"></p><div class="sensitive-modal__actions"><button class="activity-remove-modal__cancel" type="button">Cancel</button><button class="confirm activity-remove-modal__confirm" type="button">Remove</button></div></div>';
+  page.append(toolbar, list, loadMore, removeModal);
+
+  function openRemoveModal(log, onConfirm) {
+    removeModal.querySelector('.activity-remove-modal__text').textContent = log.detention
+      ? `This removes the “${log.label}” log for ${log.studentName} and cancels the linked ${log.detention.length} detention.`
+      : `This removes the “${log.label}” log for ${log.studentName}.`;
+    removeModal.hidden = false;
+    const close = () => { removeModal.hidden = true; };
+    removeModal.querySelector('.activity-remove-modal__cancel').onclick = close;
+    removeModal.querySelector('.activity-remove-modal__confirm').onclick = () => { close(); onConfirm(); };
+  }
+
+  list.addEventListener('click', (event) => {
+    const button = event.target.closest('.activity-log__remove');
+    if (!button) return;
+    const id = button.closest('.activity-log')?.dataset.id;
+    const log = logs.find((entry) => entry.id === id);
+    if (!log) return;
+    const remove = () => {
+      const index = logs.indexOf(log);
+      if (index >= 0) logs.splice(index, 1);
+      renderList();
+    };
+    if (log.detention) openRemoveModal(log, remove);
+    else remove();
+  });
 
   function matchesFilters(log, nowMs) {
     if (state.filterClass !== 'all' && log.className !== state.filterClass) return false;
@@ -139,7 +168,9 @@ function showActivityPage(content) {
     const initials = log.studentName.split(' ').map((part) => part[0]).join('');
     const card = document.createElement('article');
     card.className = `activity-log activity-log--${log.type}`;
+    card.dataset.id = log.id;
     card.innerHTML = `
+      <button class="activity-log__remove" type="button" aria-label="Remove this behaviour log">×</button>
       <div class="activity-log__head">
         <span class="pupil-photo" aria-hidden="true">${initials}</span>
         <div class="activity-log__who">
