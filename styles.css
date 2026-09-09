@@ -61,7 +61,8 @@ body {
 .device--desktop { width: min(68vw, 960px); aspect-ratio: 16 / 9; }
 .device--mobile { width: min(23vw, 290px); aspect-ratio: 9 / 18; }
 .device--fill { display: none; width: 100%; height: calc(100vh - 58px); border-radius: 0; }
-.device--fill .menu-toggle { display: none; }
+.device--fill .menu-toggle[hidden] { display: none; }
+.device--fill .mobile-menu { max-height: calc(100vh - 36px); overflow-y: auto; }
 
 .mode-fill .preview { display: none; }
 .mode-fill.mockup-stage { display: block; min-height: calc(100vh - 58px); padding: 0; }
@@ -348,8 +349,6 @@ body {
   .mockup-stage { align-items: center; flex-direction: column; padding-top: 24px; }
   .device--desktop { width: min(100%, 680px); }
   .device--mobile { width: min(55vw, 290px); }
-  .device--fill .nav-links { display: none; }
-  .device--fill .menu-toggle { display: inline-flex; }
   .device--fill .brand { padding: 0 10px; font-size: 10px; }
   .device--fill .brand b { display: none; }
   .device--fill .schedule-bar { align-items: stretch; flex-basis: 72px; min-height: 72px; flex-direction: column; gap: 4px; padding: 5px 8px; }
@@ -728,7 +727,6 @@ body {
   .device--fill .coming-up { grid-column: 1 / -1; grid-row: 2; width: 100%; min-width: 0; height: 28px; }
   .device--fill .date-selector::-webkit-calendar-picker-indicator { width: 14px; height: 14px; margin: 0; padding: 0; }
   .device--fill :is(input, select, textarea, button) { max-width: 100%; }
-  .device--fill .mobile-menu { max-height: calc(100vh - 36px); overflow-y: auto; }
   .device--fill .register-name { min-width: 0; font-size: clamp(8px, 2.8cqw, 11px); line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
   .device--fill .det-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .device--fill .det-tabs::-webkit-scrollbar { display: none; }

@@ -26,6 +26,61 @@ function showPage(content, page) {
   content.append(placeholder);
 }
 
+function setupResponsiveNav(device) {
+  const nav = device.querySelector('.navbar');
+  const linksContainer = nav?.querySelector('.nav-links');
+  const menu = nav?.querySelector('.mobile-menu');
+  const toggle = nav?.querySelector('.menu-toggle');
+  const brand = nav?.querySelector('.brand');
+  if (!nav || !linksContainer || !menu || !toggle) return;
+
+  const orderedLinks = [...linksContainer.children];
+
+  function closeMenu() {
+    menu.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+  }
+
+  function relayout() {
+    const navWidth = nav.clientWidth;
+    if (!navWidth) return;
+    orderedLinks.forEach((link) => linksContainer.append(link));
+    menu.replaceChildren();
+    closeMenu();
+
+    const brandWidth = brand ? brand.offsetWidth : 0;
+    const linkWidths = orderedLinks.map((link) => link.offsetWidth);
+    const totalLinks = linkWidths.reduce((sum, width) => sum + width, 0);
+
+    if (brandWidth + totalLinks <= navWidth) {
+      toggle.hidden = true;
+      return;
+    }
+
+    toggle.hidden = false;
+    const available = navWidth - brandWidth - toggle.offsetWidth - 8;
+    let used = 0;
+    let cut = orderedLinks.length;
+    for (let i = 0; i < orderedLinks.length; i += 1) {
+      used += linkWidths[i];
+      if (used > available) { cut = i; break; }
+    }
+    for (let i = cut; i < orderedLinks.length; i += 1) menu.append(orderedLinks[i]);
+  }
+
+  let scheduled = false;
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => { scheduled = false; relayout(); });
+  }
+
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(schedule).observe(nav);
+  window.addEventListener('resize', schedule);
+  relayout();
+}
+
 function initializeDevice(device) {
   const content = device.querySelector('.screen-content');
   const toggle = device.querySelector('.menu-toggle');
@@ -55,6 +110,8 @@ function initializeDevice(device) {
       menu.hidden = open;
     });
   }
+
+  setupResponsiveNav(device);
 }
 
 document.querySelectorAll('.device').forEach(initializeDevice);
