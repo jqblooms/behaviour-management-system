@@ -349,6 +349,7 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     });
     refresh();
     awardSidebar.append(picker);
+    picker.querySelector('[data-adjust="1"]')?.focus();
   }
 
   function renderRegister(registerList, focusIndex) {
@@ -368,11 +369,14 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
         if (code === '/' && activeRegisterSession?.id === 'P6') student.pmPresent = true;
         refreshAttendanceHighlights();
         renderRegister(registerList);
-        const nextRow = registerList.querySelector(`[data-register-index="${index + (focusNext ? 1 : 0)}"]`);
         if (code === 'L') {
           if (mobileLayout) showMinutesPicker(student, index, registerList);
-          else nextRow?.querySelector('.late-minutes')?.focus();
-        } else if (focusNext) nextRow?.querySelector('.register-code')?.focus();
+          else requestAnimationFrame(() => {
+            const minutes = registerList.querySelector(`[data-register-index="${index}"] .late-minutes`);
+            minutes?.focus();
+            minutes?.select();
+          });
+        } else if (focusNext) registerList.querySelector(`[data-register-index="${index + 1}"] .register-code`)?.focus();
       };
       codeButton.addEventListener('click', () => {
         registerList.querySelectorAll('.register-code-menu').forEach((menu) => { if (menu !== row.querySelector('.register-code-menu')) menu.hidden = true; });
@@ -479,7 +483,8 @@ function showClassView(content, className, rosterSizeOverride, searchable) {
     const body = awardSidebar.querySelector('.sidebar-body');
     body.innerHTML = '<div class="register-legend">/ Present (marks PM present automatically) · \\ Present PM · O Unauthorised · N Absent · L Late</div><div class="register-list"></div><button class="submit-register" type="button">Submit register</button>';
     const registerList = body.querySelector('.register-list');
-    renderRegister(registerList);
+    const registerNotTaken = !attendanceTaken && studentRecords.every((student) => !student.attendance);
+    renderRegister(registerList, registerNotTaken ? 0 : undefined);
     body.querySelector('.submit-register').addEventListener('click', (event) => {
       if (activeRegisterSession?.id !== session.id) {
         event.currentTarget.textContent = 'Register submitted';
