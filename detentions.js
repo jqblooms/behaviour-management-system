@@ -1,4 +1,6 @@
 const DETENTION_STORE_KEY = 'behaviour-management-system-detentions';
+const DETENTION_DATA_VERSION_KEY = 'behaviour-management-system-detentions-version';
+const DETENTION_DATA_VERSION = '2';
 const DETENTION_STATUS_CYCLE = { pending: 'attended', attended: 'notattended', notattended: 'pending' };
 const DETENTION_STATUS_META = {
   pending: { label: 'Pending', color: '#e0a23b' },
@@ -17,6 +19,25 @@ const DETENTION_COLUMNS = [
 
 function detDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 function detSeeded(seed) { let s = seed; return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
+
+function familyDetentionSeeds() {
+  const today = new Date();
+  const nextSchoolDay = new Date(today);
+  do nextSchoolDay.setDate(nextSchoolDay.getDate() + 1);
+  while (nextSchoolDay.getDay() === 0 || nextSchoolDay.getDay() === 6);
+  return [
+    {
+      id: 'det-family-today', date: detDateStr(today), time: '15:30', minutes: 30, length: '30 minutes',
+      pupil: pupilNames[0], className: 'Y9/Cs', teacher: 'Dr Okoro', room: 'Computer Room 645',
+      reason: 'Missed homework', status: 'pending',
+    },
+    {
+      id: 'det-family-upcoming', date: detDateStr(nextSchoolDay), time: '15:15', minutes: 45, length: '45 minutes',
+      pupil: pupilNames[0], className: 'Y9/Cs', teacher: 'Ms Carter', room: 'Room 101',
+      reason: 'Late to lesson', status: 'pending',
+    },
+  ];
+}
 
 function detentionSeeds() {
   const rand = detSeeded(777777);
@@ -51,9 +72,18 @@ function detentionSeeds() {
 
 function getDetentions() {
   const stored = readStoredArray(DETENTION_STORE_KEY, { allowEmpty: false });
-  if (stored) return stored;
-  const seeds = detentionSeeds();
+  if (stored) {
+    if (localStorage.getItem(DETENTION_DATA_VERSION_KEY) !== DETENTION_DATA_VERSION) {
+      const existingIds = new Set(stored.map((record) => record.id));
+      stored.unshift(...familyDetentionSeeds().filter((record) => !existingIds.has(record.id)));
+      saveDetentions(stored);
+      localStorage.setItem(DETENTION_DATA_VERSION_KEY, DETENTION_DATA_VERSION);
+    }
+    return stored;
+  }
+  const seeds = [...familyDetentionSeeds(), ...detentionSeeds()];
   saveDetentions(seeds);
+  localStorage.setItem(DETENTION_DATA_VERSION_KEY, DETENTION_DATA_VERSION);
   return seeds;
 }
 function saveDetentions(detentions) { writeStoredValue(DETENTION_STORE_KEY, detentions); }

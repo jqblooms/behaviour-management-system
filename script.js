@@ -16,8 +16,8 @@ const pageRenderers = {
 };
 
 const ROLE_NAV = {
-  student: ['Attendance', 'Behaviour'],
-  parent: ['Attendance', 'Behaviour', 'Messages'],
+  student: ['Detentions', 'Attendance', 'Behaviour'],
+  parent: ['Detentions', 'Attendance', 'Behaviour', 'Messages'],
 };
 
 function roleDefaultPage(role) {

@@ -119,6 +119,76 @@ function familyAlertBanner() {
   </div>`;
 }
 
+function familyDetentionDate(date) {
+  return new Date(`${date}T00:00:00`).toLocaleDateString([], {
+    weekday: 'short', day: 'numeric', month: 'short',
+  });
+}
+
+function familyDetentionCard(record, timing) {
+  const status = DETENTION_STATUS_META[record.status] || DETENTION_STATUS_META.pending;
+  return `<article class="family-det-card">
+    <div class="family-det-card__time">
+      <strong>${familyEscape(record.time)}</strong>
+      <span>${familyEscape(record.length)}</span>
+    </div>
+    <div class="family-det-card__details">
+      <div class="family-det-card__topline">
+        <strong>${familyEscape(record.reason)}</strong>
+        ${timing ? `<span class="family-det-card__timing">${timing}</span>` : ''}
+      </div>
+      <span>${familyEscape(record.teacher)} · ${familyEscape(record.room)}</span>
+      <span>${familyEscape(record.className)}</span>
+    </div>
+    <span class="family-det-card__status family-det-card__status--${familyEscape(record.status)}">${familyEscape(status.label)}</span>
+  </article>`;
+}
+
+function renderFamilyDetentions(body, role) {
+  const today = new Date();
+  const todayKey = detDateStr(today);
+  const nowMinutes = today.getHours() * 60 + today.getMinutes();
+  const records = getDetentions()
+    .filter((record) => record.pupil === FAMILY_STUDENT)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  const todaysRecords = records.filter((record) => record.date === todayKey);
+  const nextIndex = todaysRecords.findIndex((record) => {
+    const [hours, minutes] = record.time.split(':').map(Number);
+    return hours * 60 + minutes >= nowMinutes && record.status === 'pending';
+  });
+  const futureRecords = records.filter((record) => record.date > todayKey).slice(0, 4);
+  const subject = role === 'parent' ? FAMILY_STUDENT : 'You';
+  const possessive = role === 'parent' ? `${FAMILY_STUDENT}’s` : 'Your';
+  const todayMessage = todaysRecords.length
+    ? `${subject} ${role === 'parent' ? 'has' : 'have'} ${todaysRecords.length} detention${todaysRecords.length === 1 ? '' : 's'} today`
+    : `${subject} ${role === 'parent' ? 'has' : 'have'} no detentions today`;
+
+  const page = document.createElement('div');
+  page.className = 'family-detentions';
+  page.innerHTML = `
+    <section class="family-today ${todaysRecords.length ? 'is-alert' : 'is-clear'}" role="status" aria-live="assertive" tabindex="-1">
+      <span class="family-today__icon" aria-hidden="true">${todaysRecords.length ? '◷' : '✓'}</span>
+      <div class="family-today__message">
+        <span>Today · ${familyDetentionDate(todayKey)}</span>
+        <strong>${todayMessage}</strong>
+        <small>${todaysRecords.length ? 'Check the time, room and teacher below.' : 'There is nothing you need to attend.'}</small>
+      </div>
+      <span class="family-today__count" aria-hidden="true">${todaysRecords.length}</span>
+    </section>
+    ${todaysRecords.length ? `<section class="family-det-section">
+      <h2>${possessive} detentions today</h2>
+      <div class="family-det-list">${todaysRecords.map((record, index) => familyDetentionCard(record, index === nextIndex ? 'Next' : '')).join('')}</div>
+    </section>` : ''}
+    <section class="family-det-section family-det-section--upcoming">
+      <h2>Upcoming detentions</h2>
+      ${futureRecords.length
+        ? `<div class="family-upcoming-list">${futureRecords.map((record) => `<div class="family-upcoming-date"><span>${familyDetentionDate(record.date)}</span>${familyDetentionCard(record, '')}</div>`).join('')}</div>`
+        : '<p class="family-det-empty">No upcoming detentions.</p>'}
+    </section>`;
+  body.append(page);
+  requestAnimationFrame(() => page.querySelector('.family-today')?.focus({ preventScroll: true }));
+}
+
 function wireAlertBanner(scope) {
   const close = scope.querySelector('.family-alert__close');
   if (!close) return;
@@ -129,8 +199,8 @@ function wireAlertBanner(scope) {
 }
 
 function showFamilyPage(content, page, role) {
-  const pages = role === 'parent' ? ['Attendance', 'Behaviour', 'Messages'] : ['Attendance', 'Behaviour'];
-  const active = pages.includes(page) ? page : 'Attendance';
+  const pages = role === 'parent' ? ['Detentions', 'Attendance', 'Behaviour', 'Messages'] : ['Detentions', 'Attendance', 'Behaviour'];
+  const active = pages.includes(page) ? page : 'Detentions';
 
   const view = document.createElement('section');
   view.className = `family-view family-view--${role}`;
@@ -147,7 +217,8 @@ function showFamilyPage(content, page, role) {
   const body = view.querySelector('.family-body');
   content.append(view);
 
-  if (active === 'Messages') renderFamilyMessages(body, content);
+  if (active === 'Detentions') renderFamilyDetentions(body, role);
+  else if (active === 'Messages') renderFamilyMessages(body, content);
   else renderFamilyReport(body, active, role);
 }
 

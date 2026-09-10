@@ -909,6 +909,37 @@ body {
 .family-report .activity-log__head { grid-template-columns: minmax(0, 1fr) auto; }
 .family-report__charts--single { grid-template-columns: minmax(0, 300px); }
 
+.family-detentions { flex: 1 1 auto; min-width: 0; min-height: 0; overflow: auto; padding: clamp(10px, 2vw, 20px); }
+.family-today { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: clamp(13px, 2vw, 20px); border: 1px solid; border-radius: 7px; box-shadow: 0 3px 10px rgba(53, 72, 81, .08); outline: 0; }
+.family-today.is-alert { border-color: #efb5b8; background: #fff3f3; }
+.family-today.is-clear { border-color: #b9dfc5; background: #f1faf4; }
+.family-today__icon { display: grid; width: 44px; height: 44px; place-items: center; border: 2px solid currentColor; border-radius: 50%; font-size: 25px; line-height: 1; }
+.family-today.is-alert .family-today__icon, .family-today.is-alert .family-today__count { color: #d9575e; }
+.family-today.is-clear .family-today__icon, .family-today.is-clear .family-today__count { color: #3d9c5c; }
+.family-today__message { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.family-today__message span { color: #84959e; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.family-today__message strong { color: #3e5662; font-size: clamp(15px, 2vw, 20px); line-height: 1.2; }
+.family-today__message small { color: #687e89; font-size: 10px; }
+.family-today__count { min-width: 38px; font-size: 28px; font-weight: 700; text-align: center; }
+.family-det-section { margin-top: 14px; padding: 12px; border: 1px solid #e1e9ec; border-radius: 5px; background: #fff; }
+.family-det-section h2 { margin: 0 0 9px; color: #506873; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+.family-det-list, .family-upcoming-list { display: flex; flex-direction: column; gap: 7px; }
+.family-det-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; padding: 9px 10px; border: 1px solid #e2e9ec; border-left: 3px solid #e76c71; border-radius: 4px; background: #fff; }
+.family-det-card__time { display: flex; flex-direction: column; color: #425965; }
+.family-det-card__time strong { font-size: 17px; line-height: 1; }
+.family-det-card__time span { margin-top: 3px; color: #8999a2; font-size: 9px; }
+.family-det-card__details { display: flex; min-width: 0; flex-direction: column; gap: 2px; color: #7a8d97; font-size: 10px; }
+.family-det-card__details strong { color: #425965; font-size: 12px; }
+.family-det-card__topline { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.family-det-card__timing { flex: 0 0 auto; padding: 2px 6px; border-radius: 8px; background: #e76c71; color: #fff; font-size: 8px; font-weight: 700; text-transform: uppercase; }
+.family-det-card__status { padding: 3px 7px; border-radius: 9px; background: #fff1d9; color: #ad7418; font-size: 9px; font-weight: 700; white-space: nowrap; }
+.family-det-card__status--attended { background: #e8f6ec; color: #378852; }
+.family-det-card__status--notattended { background: #fbe8e9; color: #bd4c52; }
+.family-upcoming-date { display: grid; grid-template-columns: 78px minmax(0, 1fr); align-items: center; gap: 8px; }
+.family-upcoming-date > span { color: #718690; font-size: 10px; font-weight: 700; }
+.family-upcoming-date .family-det-card { grid-template-columns: 58px minmax(0, 1fr) auto; }
+.family-det-empty { margin: 0; color: #8a9aa4; font-size: 11px; }
+
 .family-alert { margin-bottom: 12px; border: 1px solid #f1d9b8; border-radius: 5px; background: #fff8ec; }
 .family-alert__head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
 .family-alert__head strong { flex: 1 1 auto; color: #9a6a1c; font-size: 12px; }
@@ -968,6 +999,18 @@ body {
 
 .device--mobile .family-report__charts--single, .device--fill .family-report__charts--single { grid-template-columns: 1fr; }
 .device--mobile .msg-list { position: absolute; inset: 0; z-index: 3; flex-basis: auto; }
+.device--mobile .family-detentions { padding: 8px; }
+.device--mobile .family-today { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; padding: 11px; }
+.device--mobile .family-today__icon { width: 34px; height: 34px; font-size: 20px; }
+.device--mobile .family-today__message strong { font-size: 14px; }
+.device--mobile .family-today__message small { font-size: 9px; }
+.device--mobile .family-today__count { min-width: 24px; font-size: 22px; }
+.device--mobile .family-det-section { margin-top: 8px; padding: 8px; }
+.device--mobile .family-det-card { grid-template-columns: 52px minmax(0, 1fr); gap: 7px; padding: 8px; }
+.device--mobile .family-det-card__status { grid-column: 2; justify-self: start; }
+.device--mobile .family-det-card__time strong { font-size: 14px; }
+.device--mobile .family-upcoming-date { grid-template-columns: 1fr; gap: 4px; }
+.device--mobile .family-upcoming-date .family-det-card { grid-template-columns: 52px minmax(0, 1fr); }
 
 .device--mobile .admin-tabs, .device--mobile .admin-body { padding: 7px; }
 .device--mobile .admin-tab { flex: 1; padding: 0 5px; }
@@ -981,6 +1024,18 @@ body {
   .device--fill .student-overview__charts, .device--fill .student-overview__cols { grid-template-columns: 1fr; }
   .device--fill .family-report__charts--single { grid-template-columns: 1fr; }
   .device--fill .msg-list { position: absolute; inset: 0; z-index: 3; flex-basis: auto; }
+  .device--fill .family-detentions { padding: 8px; }
+  .device--fill .family-today { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; padding: 11px; }
+  .device--fill .family-today__icon { width: 34px; height: 34px; font-size: 20px; }
+  .device--fill .family-today__message strong { font-size: 14px; }
+  .device--fill .family-today__message small { font-size: 9px; }
+  .device--fill .family-today__count { min-width: 24px; font-size: 22px; }
+  .device--fill .family-det-section { margin-top: 8px; padding: 8px; }
+  .device--fill .family-det-card { grid-template-columns: 52px minmax(0, 1fr); gap: 7px; padding: 8px; }
+  .device--fill .family-det-card__status { grid-column: 2; justify-self: start; }
+  .device--fill .family-det-card__time strong { font-size: 14px; }
+  .device--fill .family-upcoming-date { grid-template-columns: 1fr; gap: 4px; }
+  .device--fill .family-upcoming-date .family-det-card { grid-template-columns: 52px minmax(0, 1fr); }
   .device--fill .admin-tabs, .device--fill .admin-body { padding: 7px; }
   .device--fill .admin-tab { flex: 1; padding: 0 5px; }
   .device--fill .admin-behaviour-form { grid-template-columns: 1fr 58px; }
