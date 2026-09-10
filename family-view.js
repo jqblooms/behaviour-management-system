@@ -78,7 +78,7 @@ function familyDayLabel(ms) {
 
 function familyWeekLabel(range) {
   const opts = { day: 'numeric', month: 'short' };
-  return `${range.monday.toLocaleDateString([], opts)} – ${range.friday.toLocaleDateString([], opts)}`;
+  return `${range.monday.toLocaleDateString([], opts)} to ${range.friday.toLocaleDateString([], opts)}`;
 }
 
 function familyChartCard(heading, segments) {
@@ -210,7 +210,7 @@ function showFamilyPage(content, page, role) {
       <span class="pupil-photo" aria-hidden="true">${familyInitials(FAMILY_STUDENT)}</span>
       <div class="family-id__text">
         <strong>${FAMILY_STUDENT}</strong>
-        <span>${role === 'parent' ? 'Parent view' : 'Student view'} · ${FAMILY_YEAR}</span>
+        <span>${FAMILY_YEAR}</span>
       </div>
     </header>
     <div class="family-body"></div>`;
@@ -365,7 +365,7 @@ function renderFamilyReport(body, tab, role) {
   function attendanceHistory(rows) {
     if (!rows.length) return '<p class="so-empty">No attendance records for this period.</p>';
     return [...rows].sort((a, b) => b.date.localeCompare(a.date)).map((record) => {
-      const [label, color] = FAMILY_ATT_CODES[record.code] || ['—', '#9aa7ae'];
+      const [label, color] = FAMILY_ATT_CODES[record.code] || ['Not recorded', '#9aa7ae'];
       return `<article class="activity-log activity-log--attendance">
         <div class="activity-log__head">
           <div class="activity-log__who"><span class="activity-log__name">${label}</span><span class="activity-log__class">${record.className}</span></div>
@@ -479,18 +479,18 @@ function familySeedMessages() {
   const day = 86400000;
   return {
     carter: [
-      { from: 'teacher', text: 'Good afternoon — just a note that Aisha has settled in really well this term.', at: now - 3 * day - 5 * hour },
+      { from: 'teacher', text: 'Good afternoon. Aisha has settled in really well this term.', at: now - 3 * day - 5 * hour },
       { from: 'parent', text: 'Thank you, that’s lovely to hear.', at: now - 3 * day - 4 * hour },
-      { from: 'teacher', text: 'Parents’ evening is on the 24th — I’ll share a booking link next week.', at: now - 2 * day - 2 * hour },
+      { from: 'teacher', text: 'Parents’ evening is on the 24th. I’ll share a booking link next week.', at: now - 2 * day - 2 * hour },
     ],
     hughes: [
-      { from: 'teacher', text: 'Aisha scored 84% on the algebra assessment — a real step up.', at: now - 6 * day },
+      { from: 'teacher', text: 'Aisha scored 84% on the algebra assessment. This is a real step up.', at: now - 6 * day },
       { from: 'parent', text: 'That’s great, she’s been practising most evenings.', at: now - 6 * day + 2 * hour },
       { from: 'teacher', text: 'It shows. A bit of practice over half term would keep the momentum.', at: now - 6 * day + 3 * hour },
     ],
     patel: [
       { from: 'parent', text: 'Hi Ms Patel, which book does Aisha need for next week?', at: now - 1 * day - 3 * hour },
-      { from: 'teacher', text: 'It’s “Animal Farm” — we start reading on Monday.', at: now - 1 * day - 2 * hour },
+      { from: 'teacher', text: 'It’s “Animal Farm”. We start reading on Monday.', at: now - 1 * day - 2 * hour },
     ],
     singh: [
       { from: 'teacher', text: 'Reminder: safety goggles are needed for Thursday’s practical.', at: now - 5 * hour },
@@ -498,7 +498,7 @@ function familySeedMessages() {
     green: [],
     okoro: [
       { from: 'teacher', text: 'Aisha’s Scratch game was one of the best in the class today.', at: now - 9 * hour },
-      { from: 'parent', text: 'She was so proud of it — thank you for letting me know.', at: now - 8 * hour },
+      { from: 'parent', text: 'She was so proud of it. Thank you for letting me know.', at: now - 8 * hour },
     ],
   };
 }
@@ -574,7 +574,7 @@ function renderFamilyMessages(body, content) {
     avatar.textContent = familyInitials(teacher.name);
     const messages = familyMessages()[currentId] || [];
     if (!messages.length) {
-      scroll.innerHTML = '<p class="msg-empty">No messages yet — send the first one below.</p>';
+      scroll.innerHTML = '<p class="msg-empty">No messages yet. Send the first one below.</p>';
       return;
     }
     let html = '';
@@ -622,15 +622,15 @@ function teacherSeedMessages() {
   const day = 86400000;
   return {
     'Ben Carter': { className: 'Y1/Cs', messages: [
-      { from: 'teacher', text: 'Hi — Ben left his PE kit today, could it come back in tomorrow?', at: now - 2 * day - 3 * hour },
+      { from: 'teacher', text: 'Hi. Ben left his PE kit today. Could it come back in tomorrow?', at: now - 2 * day - 3 * hour },
       { from: 'parent', text: 'Sorry about that, will send it in.', at: now - 2 * day - 2 * hour },
     ] },
     'Grace Hall': { className: 'Y6/Cs', messages: [
       { from: 'parent', text: 'Is Grace behind on the reading log?', at: now - 6 * hour },
-      { from: 'teacher', text: 'A little — two entries would catch her up, nothing to worry about.', at: now - 5 * hour },
+      { from: 'teacher', text: 'A little. Two entries would catch her up. There is nothing to worry about.', at: now - 5 * hour },
     ] },
     'Noah Okafor': { className: 'Y3/Cs', messages: [
-      { from: 'teacher', text: 'Noah had a great week — three merits for helping others.', at: now - 1 * day },
+      { from: 'teacher', text: 'Noah had a great week. He earned three merits for helping others.', at: now - 1 * day },
     ] },
     'Isla James': { className: 'Y8/Cs', messages: [
       { from: 'teacher', text: 'Reminder: parents’ evening booking closes Friday.', at: now - 35 * 60000 },
@@ -728,7 +728,7 @@ function showTeacherMessages(content) {
     listScroll.replaceChildren();
     const rows = teacherConversationsSorted();
     if (!rows.length) {
-      listScroll.innerHTML = '<p class="msg-empty">No conversations yet — start one with “＋ New”.</p>';
+      listScroll.innerHTML = '<p class="msg-empty">No conversations yet. Select “＋ New” to start one.</p>';
       return;
     }
     rows.forEach(({ student, className, last }) => {
@@ -763,7 +763,7 @@ function showTeacherMessages(content) {
     who.textContent = `${current} · ${conv.className}`;
     avatar.textContent = familyInitials(current);
     if (!conv.messages.length) {
-      scroll.innerHTML = '<p class="msg-empty">No messages yet — send the first one below.</p>';
+      scroll.innerHTML = '<p class="msg-empty">No messages yet. Send the first one below.</p>';
       return;
     }
     let html = '';

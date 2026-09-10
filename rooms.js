@@ -159,7 +159,7 @@ function showRoomsPage(content) {
     if (!current().desks.length) {
       const hint = document.createElement('div');
       hint.className = 'rooms-empty';
-      hint.textContent = 'No desks yet — add a desk from the panel to start.';
+      hint.textContent = 'No desks yet. Add a desk from the panel to start.';
       canvas.append(hint);
       return;
     }

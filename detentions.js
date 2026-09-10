@@ -151,7 +151,7 @@ function showDetentionsPage(content) {
   const deleteModal = document.createElement('div');
   deleteModal.className = 'det-confirm';
   deleteModal.hidden = true;
-  deleteModal.innerHTML = `<div class="det-confirm__card" role="dialog" aria-modal="true" aria-labelledby="det-confirm-title"><h2 id="det-confirm-title">Delete detention?</h2><p>This removes the detention from this mockup.</p><div class="det-confirm__actions"><button type="button" class="det-confirm__cancel">Cancel</button><button type="button" class="det-confirm__delete">Delete</button></div></div>`;
+  deleteModal.innerHTML = `<div class="det-confirm__card" role="dialog" aria-modal="true" aria-labelledby="det-confirm-title"><h2 id="det-confirm-title">Delete detention?</h2><p>This detention will be permanently removed.</p><div class="det-confirm__actions"><button type="button" class="det-confirm__cancel">Cancel</button><button type="button" class="det-confirm__delete">Delete</button></div></div>`;
 
   page.append(toolbar, tableWrap, loadMore, sidebar, deleteModal);
 

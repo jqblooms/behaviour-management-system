@@ -678,7 +678,7 @@ function showAnalyticsPage(content) {
   function buildAttendanceHistoryCard(record) {
     const initials = record.pupil.split(' ').map((part) => part[0]).join('');
     const codeMap = { '/': ['Present', '#54ba75'], '\\': ['Present PM', '#54ba75'], 'L': ['Late', '#f3c04f'], 'O': ['Unauthorised', '#e76c71'], 'N': ['Absent', '#e76c71'] };
-    const [label, color] = codeMap[record.code] || ['—', '#9aa7ae'];
+    const [label, color] = codeMap[record.code] || ['Not recorded', '#9aa7ae'];
     const card = document.createElement('article');
     card.className = 'activity-log activity-log--attendance';
     card.innerHTML = `
